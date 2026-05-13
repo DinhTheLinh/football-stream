@@ -155,19 +155,25 @@
     <script src="data.js"></script>
     <script src="auth.js"></script>
     <script>
-        // Fake data phòng trường hợp file data.js chưa chạy
-        window.db = window.db || {
-            tblMatch: [
-                {matchId: 1, homeTeamId: 1, awayTeamId: 2, status: 'Live', homeScore: 2, awayScore: 1, currentTime: '72', stadium: 'Champions League'},
-                {matchId: 2, homeTeamId: 3, awayTeamId: 4, status: 'Upcoming', homeScore: 0, awayScore: 0, currentTime: '00:00', stadium: 'Premier League'}
-            ],
-            tblTeam: [
-                {teamId: 1, name: 'Manchester United', shortName: 'MUN', logo: '🔴'}, 
-                {teamId: 2, name: 'Real Madrid', shortName: 'RMD', logo: '⚪'},
-                {teamId: 3, name: 'Arsenal', shortName: 'ARS', logo: '🔴'}, 
-                {teamId: 4, name: 'Man City', shortName: 'MCI', logo: '🩵'}
-            ]
-        };
+       // Cập nhật dữ liệu thật từ hệ thống (localStorage) do Admin thêm
+        const savedData = localStorage.getItem('livestream_data');
+        if (savedData) {
+            window.db = JSON.parse(savedData);
+        } else {
+            // Nếu hệ thống chưa có dữ liệu, khởi tạo mảng rỗng để tránh lỗi
+            window.db = {
+                tblMatch: [],
+                tblTeam: []
+            };
+        }
+
+        // Tự động làm mới giao diện ngay khi Admin thêm trận đấu mới (không cần F5)
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'livestream_data') {
+                window.db = JSON.parse(e.newValue);
+                renderMatches(); 
+            }
+        });
 
         // Hàm lấy Session giả lập (Bạn có thể map với auth.js của bạn)
         function getGuestSession() { return sessionStorage.getItem('viewerNick'); }
