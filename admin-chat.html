@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kiểm Duyệt Chat - Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style/livechat.css">
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="nav-left">
+            <button class="back-btn" onclick="goBack()" id="navBackBtn" style="display:none;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            </button>
+            <div class="logo">ADMIN MODERATION</div>
+        </div>
+        <div style="color: var(--text-muted); font-size: 14px;">Logged in as: Admin</div>
+    </nav>
+
+    <!-- VIEW 1: DANH SÁCH TRẬN ĐẤU -->
+    <div id="matchListView">
+        <h2>Chọn trận đấu đang LIVE để kiểm duyệt</h2>
+        <div class="grid-matches" id="liveMatchGrid">
+            <!-- JS Render -->
+        </div>
+    </div>
+
+    <!-- VIEW 2: CHI TIẾT KIỂM DUYỆT -->
+    <div id="moderationView">
+        <div class="left-panel">
+            <div class="video-container">
+                <h3 id="videoTitle">Đang phát Stream...</h3>
+            </div>
+        </div>
+        <div class="right-panel">
+            <div class="chat-header">
+                <span>Live Chat</span>
+                <span style="color: var(--accent-red); font-size: 12px;">Đang giám sát (REC)</span>
+            </div>
+            <div class="chat-messages" id="chatBox">
+                <!-- JS Render -->
+            </div>
+            <div class="chat-actions">
+                <button class="btn btn-secondary" onclick="openBanListModal()">DS Bị Cấm</button>
+                <button class="btn btn-danger" onclick="alert('Đã xóa toàn bộ chat!')">Clear All</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MENU NGỮ CẢNH (Chuột phải) -->
+    <div id="contextMenu">
+        <div class="ctx-item delete" onclick="handleDeleteMsg()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            Xóa tin nhắn
+        </div>
+        <div class="ctx-item" onclick="openBanModal()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>
+            Cấm người dùng
+        </div>
+    </div>
+
+    <!-- MODAL CẤM NGƯỜI DÙNG -->
+    <div class="modal-overlay" id="banModal">
+        <div class="modal-content">
+            <div class="modal-title">Cấm Người Dùng</div>
+            <div class="form-group">
+                <label>Người dùng:</label>
+                <input type="text" id="banUsername" readonly disabled>
+            </div>
+            <div class="form-group">
+                <label>Thời gian cấm:</label>
+                <select id="banDuration">
+                    <option value="10">10 Phút</option>
+                    <option value="60">1 Giờ</option>
+                    <option value="999999">Vĩnh viễn</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Lý do:</label>
+                <select id="banReason">
+                    <option value="Ngôn từ kích động">Ngôn từ kích động</option>
+                    <option value="Spam">Spam</option>
+                    <option value="Quảng cáo cá độ">Quảng cáo cá độ</option>
+                    <option value="Khác">Khác</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeModal('banModal')">Hủy</button>
+                <button class="btn btn-danger" onclick="confirmBan()">Xác nhận Cấm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DANH SÁCH BỊ CẤM -->
+    <div class="modal-overlay" id="banListModal">
+        <div class="modal-content" style="width: 600px;">
+            <div class="modal-title" style="color: var(--text-main);">Danh Sách Người Bị Cấm</div>
+            <div style="max-height: 300px; overflow-y: auto;">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>User ID</th>
+                            <th>Lý do</th>
+                            <th>Trạng thái</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody id="banListTableBody">
+                        <!-- JS Render -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeModal('banListModal')">Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast">Thao tác thành công</div>
+
+    <script>
+        // --- 1. MOCK DATA (Thay bằng data.js của bạn) ---
+        window.db = window.db || { 
+            tblMatch: [
+                {matchId: 1, homeTeamId: 1, awayTeamId: 2, status: 'Live', homeScore: 2, awayScore: 1, tblLiveChatID: 1},
+                {matchId: 2, homeTeamId: 3, awayTeamId: 4, status: 'Live', homeScore: 0, awayScore: 0, tblLiveChatID: 2}
+            ],
+            tblTeam: [{teamId: 1, name: 'MU'}, {teamId: 2, name: 'Chelsea'}, {teamId: 3, name: 'Arsenal'}, {teamId: 4, name: 'Man City'}],
+            tblCommentDetail: [
+                {ID: 1, tblLiveChatID: 1, tblUserID: 'User_101', content: "Trọng tài bắt chán thế!", status: "Visible"},
+                {ID: 2, tblLiveChatID: 1, tblUserID: 'User_999', content: "Link cá độ bong88 tại đây anh em ơi!!!", status: "Visible"},
+                {ID: 3, tblLiveChatID: 1, tblUserID: 'User_102', content: "Chơi hay quá!", status: "Visible"},
+                {ID: 4, tblLiveChatID: 2, tblUserID: 'User_103', content: "Trận này chắc hòa thôi.", status: "Visible"},
+                {ID: 5, tblLiveChatID: 2, tblUserID: 'User_104', content: "Doi bong toi yeu", status: "Visible"},
+                {ID: 6, tblLiveChatID: 2, tblUserID: 'User_999', content: "Cá độ bóng đá uy tín tại bong88, anh em vào xem nào!!!", status: "Visible"},
+                {ID: 7, tblLiveChatID: 1, tblUserID: 'User_105', content: "Cấm thằng User_999 này đi admin ơi, spam link cá độ hoài!", status: "Visible"},
+                {ID: 8, tblLiveChatID: 2, tblUserID: 'User_106', content: "Quả đấy chuyền thì có bàn rồi", status: "Visible"},
+                {ID: 9, tblLiveChatID: 2, tblUserID: 'User_107', content: "Thua rồi thua rồi :(", status: "Visible"},
+                {ID: 10, tblLiveChatID: 1, tblUserID: 'User_108', content: "Không thắng hôm nay thì bao giờ thắng đây", status: "Visible"}
+            ],
+            tblGuest: [
+                {id: 1, tblUserID: 'User_999', status: 'Active', banReason: null} // Mock user bảng guest
+            ]
+        };
+
+        // --- 2. BIẾN TOÀN CỤC ---
+        let currentMatchId = null;
+        let currentChatId = null;
+        let selectedMsgId = null;
+        let selectedUserId = null;
+        let chatInterval = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderLiveMatches();
+        });
+
+        // --- 3. ĐIỀU HƯỚNG GIAO DIỆN ---
+        function renderLiveMatches() {
+            const grid = document.getElementById('liveMatchGrid');
+            const liveMatches = window.db.tblMatch.filter(m => m.status === 'Live');
+            
+            grid.innerHTML = liveMatches.map(m => {
+                const home = window.db.tblTeam.find(t => t.teamId === m.homeTeamId).name;
+                const away = window.db.tblTeam.find(t => t.teamId === m.awayTeamId).name;
+                return `
+                    <div class="match-card" onclick="openModeration(${m.matchId}, ${m.tblLiveChatID}, '${home} vs ${away}')">
+                        <div class="live-badge">LIVE</div>
+                        <h3>${home} ${m.homeScore} - ${m.awayScore} ${away}</h3>
+                        <p style="color: var(--text-muted); margin-top: 10px; font-size: 13px;">Click để kiểm duyệt chat</p>
+                    </div>`;
+            }).join('');
+        }
+
+        function openModeration(matchId, chatId, title) {
+            currentMatchId = matchId;
+            currentChatId = chatId;
+            document.getElementById('matchListView').style.display = 'none';
+            document.getElementById('moderationView').style.display = 'flex';
+            document.getElementById('navBackBtn').style.display = 'flex';
+            document.getElementById('videoTitle').innerText = "Trực tiếp: " + title;
+            
+            renderChat();
+            chatInterval = setInterval(renderChat, 3000); // Tự động làm mới chat
+        }
+
+        function goBack() {
+            clearInterval(chatInterval);
+            document.getElementById('matchListView').style.display = 'block';
+            document.getElementById('moderationView').style.display = 'none';
+            document.getElementById('navBackBtn').style.display = 'none';
+        }
+
+        // --- 4. RENDER VÀ XỬ LÝ SỰ KIỆN CHAT ---
+        function renderChat() {
+            const msgs = window.db.tblCommentDetail.filter(c => c.tblLiveChatID === currentChatId && c.status === "Visible");
+            const box = document.getElementById('chatBox');
+            const isScrolledToBottom = box.scrollHeight - box.clientHeight <= box.scrollTop + 50;
+
+            box.innerHTML = msgs.map(m => `
+                <div class="msg-bubble" data-msgid="${m.ID}" data-userid="${m.tblUserID}">
+                    <div class="msg-user">${m.tblUserID}</div>
+                    <div class="msg-text">${m.content}</div>
+                </div>
+            `).join('');
+
+            if (isScrolledToBottom) box.scrollTop = box.scrollHeight;
+            attachContextMenu();
+        }
+
+        // Bắt sự kiện Click Chuột Phải (Context Menu)
+        function attachContextMenu() {
+            const bubbles = document.querySelectorAll('.msg-bubble');
+            bubbles.forEach(bubble => {
+                bubble.addEventListener('contextmenu', function(e) {
+                    e.preventDefault(); // Chặn menu mặc định của trình duyệt
+                    selectedMsgId = parseInt(this.getAttribute('data-msgid'));
+                    selectedUserId = this.getAttribute('data-userid');
+                    
+                    const menu = document.getElementById('contextMenu');
+                    menu.style.display = 'block';
+                    menu.style.left = e.pageX + 'px';
+                    menu.style.top = e.pageY + 'px';
+                });
+            });
+        }
+
+        // Ẩn Context Menu khi click chỗ khác
+        document.addEventListener('click', () => {
+            document.getElementById('contextMenu').style.display = 'none';
+        });
+
+        // --- 5. CHỨC NĂNG: XÓA TIN NHẮN (Bước 7a) ---
+        function handleDeleteMsg() {
+            const msg = window.db.tblCommentDetail.find(m => m.ID === selectedMsgId);
+            if(msg) {
+                msg.status = "Hidden"; // Đánh dấu ẩn
+                renderChat();
+                showToast("Đã xóa tin nhắn thành công.");
+            }
+        }
+
+        // --- 6. CHỨC NĂNG: CẤM NGƯỜI DÙNG (Bước 7, 8, 9, 10) ---
+        function openBanModal() {
+            document.getElementById('banUsername').value = selectedUserId;
+            document.getElementById('banModal').style.display = 'flex';
+        }
+
+        function confirmBan() {
+            const duration = document.getElementById('banDuration').value;
+            const reason = document.getElementById('banReason').value;
+            
+            // Tìm user trong tblGuest (Nếu chưa có thì thêm mới vào mock data để demo)
+            let guest = window.db.tblGuest.find(g => g.tblUserID === selectedUserId);
+            if(!guest) {
+                guest = { id: Date.now(), tblUserID: selectedUserId };
+                window.db.tblGuest.push(guest);
+            }
+            
+            // Cập nhật trạng thái cấm
+            guest.status = 'Banned';
+            guest.banReason = reason;
+            // Xóa luôn tin nhắn của người này cho sạch (Tuỳ chọn)
+            handleDeleteMsg(); 
+
+            closeModal('banModal');
+            showToast("Xử lý vi phạm thành công.");
+        }
+
+        // --- 7. CHỨC NĂNG: DANH SÁCH BỊ CẤM & GỠ CẤM (Bước 4a) ---
+        function openBanListModal() {
+            const tbody = document.getElementById('banListTableBody');
+            const bannedUsers = window.db.tblGuest.filter(g => g.status === 'Banned');
+            
+            if(bannedUsers.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Không có ai bị cấm.</td></tr>';
+            } else {
+                tbody.innerHTML = bannedUsers.map(g => `
+                    <tr>
+                        <td>${g.tblUserID}</td>
+                        <td>${g.banReason}</td>
+                        <td><span style="color:var(--accent-red)">Banned</span></td>
+                        <td><button class="btn btn-primary" style="padding: 6px 12px; font-size:12px;" onclick="unbanUser('${g.tblUserID}')">Gỡ cấm</button></td>
+                    </tr>
+                `).join('');
+            }
+            document.getElementById('banListModal').style.display = 'flex';
+        }
+
+        function unbanUser(userId) {
+            const guest = window.db.tblGuest.find(g => g.tblUserID === userId);
+            if(guest) {
+                guest.status = 'Active';
+                guest.banReason = null;
+                showToast("Đã gỡ cấm người dùng.");
+                openBanListModal(); // Render lại bảng
+            }
+        }
+
+        // --- TIỆN ÍCH UI ---
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.innerText = msg;
+            toast.classList.add('show');
+            setTimeout(() => { toast.classList.remove('show'); }, 3000);
+        }
+    </script>
+</body>
+</html>

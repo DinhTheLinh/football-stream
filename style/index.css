@@ -1,0 +1,85 @@
+ 
+        /* Tái sử dụng Theme Elite Stadium */
+        :root {
+            --bg-main: #0e1015;
+            --bg-card: #1a1d24;
+            --bg-input: #252830;
+            --accent-green: #22c55e;
+            --accent-red: #ef4444;
+            --text-main: #ffffff;
+            --text-muted: #9ca3af;
+            --border-color: #2a2d35;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background-color: var(--bg-main); color: var(--text-main); font-family: 'Inter', sans-serif; min-height: 100vh; overflow-x: hidden; }
+
+        /* NAVBAR */
+        .elite-nav { display: flex; justify-content: space-between; align-items: center; padding: 16px 40px; border-bottom: 1px solid var(--border-color); background-color: rgba(14, 16, 21, 0.95); backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 100; }
+        .elite-logo { font-size: 24px; font-weight: 900; font-style: italic; letter-spacing: -0.5px; color: var(--text-main); }
+        .elite-logo span { color: var(--accent-green); }
+        
+        .elite-search { display: flex; align-items: center; background-color: var(--bg-input); padding: 10px 20px; border-radius: 24px; width: 350px; border: 1px solid transparent; transition: border-color 0.3s; }
+        .elite-search:focus-within { border-color: var(--accent-green); }
+        .elite-search input { background: transparent; border: none; color: var(--text-main); outline: none; margin-left: 10px; width: 100%; font-family: 'Inter'; }
+        .elite-search svg { color: var(--text-muted); width: 18px; height: 18px; }
+        
+        .nav-icons { display: flex; gap: 20px; align-items: center; color: var(--text-muted); }
+        .nav-icons svg { width: 22px; height: 22px; cursor: pointer; transition: color 0.2s; }
+        .nav-icons svg:hover { color: var(--text-main); }
+
+        /* HERO SECTION */
+        .elite-hero { margin-top: 40px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: flex-end; }
+        .elite-title { font-size: 42px; font-weight: 800; margin-bottom: 8px; }
+        .elite-subtitle { font-size: 16px; color: var(--text-muted); }
+        
+        /* FILTERS (Đã xóa Tennis, Basketball) */
+        .elite-filters { display: flex; gap: 12px; }
+        .elite-filter-btn { background-color: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-muted); padding: 10px 20px; border-radius: 30px; cursor: pointer; font-weight: 600; font-size: 14px; transition: all 0.3s; font-family: 'Inter'; }
+        .elite-filter-btn:hover { border-color: var(--text-muted); color: var(--text-main); }
+        .elite-filter-btn.active { background-color: rgba(34, 197, 94, 0.1); border-color: var(--accent-green); color: var(--accent-green); }
+
+        /* MATCH GRID & CARDS */
+        .section-title { font-size: 18px; margin: 30px 0 20px 0; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 1px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; display: inline-block; }
+        .match-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 24px; margin-bottom: 40px; }
+        
+        .elite-match-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 24px; cursor: pointer; transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s; position: relative; overflow: hidden; }
+        .elite-match-card:hover { transform: translateY(-5px); border-color: #3a3f4a; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        
+        .elite-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .elite-league { font-size: 12px; font-weight: 600; color: var(--text-muted); display: flex; align-items: center; gap: 6px; text-transform: uppercase; }
+        .elite-league svg { width: 14px; height: 14px; }
+        
+        .elite-live-badge { background-color: rgba(239, 68, 68, 0.1); color: var(--accent-red); padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 800; display: flex; align-items: center; gap: 6px; border: 1px solid rgba(239, 68, 68, 0.2); }
+        .elite-live-badge::before { content: ''; width: 6px; height: 6px; background: var(--accent-red); border-radius: 50%; box-shadow: 0 0 8px var(--accent-red); animation: pulse 1.5s infinite; }
+        .elite-upcoming-badge { background-color: var(--bg-input); color: var(--text-muted); padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 700; border: 1px solid var(--border-color); }
+        
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+
+        .elite-card-body { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .elite-team { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 30%; }
+        .elite-logo-bg { width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(145deg, #1e222a, #16181e); box-shadow:  5px 5px 10px #0e0f13, -5px -5px 10px #222731; display: flex; align-items: center; justify-content: center; font-size: 28px; }
+        .elite-team-name { font-size: 16px; font-weight: 700; }
+        
+        .elite-score { font-size: 32px; font-weight: 900; width: 40%; text-align: center; }
+        .elite-score span { color: var(--text-muted); margin: 0 5px; }
+        
+        .elite-watch-btn { width: 100%; padding: 14px; background-color: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 8px; font-weight: 600; font-family: 'Inter'; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; }
+        .elite-match-card:hover .elite-watch-btn { background-color: var(--accent-green); color: #000; border-color: var(--accent-green); }
+        .elite-watch-btn svg { width: 18px; height: 18px; }
+
+        /* MODAL NICKNAME */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 1000; align-items: center; justify-content: center; }
+        .modal.active { display: flex; }
+        .modal-content { background: var(--bg-card); padding: 32px; border-radius: 16px; width: 400px; border: 1px solid var(--border-color); text-align: center; }
+        .modal-header { font-size: 22px; font-weight: 800; margin-bottom: 10px; color: var(--text-main); }
+        .modal-content p { color: var(--text-muted); margin-bottom: 24px; font-size: 14px; line-height: 1.5; }
+        .modal-content input { width: 100%; padding: 14px 20px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 8px; font-size: 16px; font-family: 'Inter'; margin-bottom: 24px; outline: none; transition: border-color 0.3s; text-align: center; }
+        .modal-content input:focus { border-color: var(--accent-green); }
+        .modal-actions button { width: 100%; padding: 14px; background: var(--text-main); color: #000; border: none; border-radius: 8px; font-weight: 800; font-size: 15px; cursor: pointer; transition: opacity 0.2s; }
+        .modal-actions button:hover { opacity: 0.8; }
+
+        /* TOAST */
+        #toast { position: fixed; bottom: 20px; right: 20px; background: var(--accent-green); color: #000; padding: 12px 24px; border-radius: 6px; font-weight: 600; transform: translateX(150%); transition: transform 0.3s ease; z-index: 3000; }
+        #toast.show { transform: translateX(0); }
+  

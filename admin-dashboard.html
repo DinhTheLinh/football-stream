@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="admin-wrapper">
+        <aside class="admin-sidebar">
+            <div class="logo">⚽ AdminPanel</div>
+            <nav class="admin-nav">
+                <a href="admin-dashboard.html" class="active">📊 Tổng Quan Dashboard</a>
+                <a href="admin-match.html">🏟️ Quản Lý Trận Đấu</a>
+                <a href="admin-event.html">⏱️ Cập Nhật Events</a>
+                <a href="admin-chat.html">🛡️ Kiểm Duyệt Chat</a>
+            </nav>
+            <div style="padding: 20px;">
+                <button class="btn-danger" style="width: 100%;" onclick="logoutAdmin()">🚪 Đăng xuất</button>
+            </div>
+        </aside>
+
+        <main class="admin-main">
+            <div class="admin-header">
+                <h2>Bảng Điều Khiển</h2>
+                <div class="user-profile" style="display:flex; align-items:center; gap:10px; background:var(--bg-card); padding:10px 20px; border-radius:30px; border:1px solid var(--glass-border);">
+                    <span id="welcomeMsg" style="font-weight:600; color:var(--accent-green);">Welcome</span>
+                </div>
+            </div>
+
+            <div class="grid-layout" style="grid-template-columns: repeat(3, 1fr);">
+                <div class="card" style="cursor:pointer; display:flex; flex-direction:column; align-items:center; text-align:center; padding: 40px 20px; border-top: 4px solid var(--accent-green);" onclick="window.location.href='admin-match.html'">
+                    <span style="font-size: 3rem; margin-bottom:15px;">🏟️</span>
+                    <h3>Quản Lý Trận Đấu</h3>
+                    <p style="color:var(--text-muted); font-size:0.9rem; margin-top:10px;">Thêm, sửa, xóa, chuyển trạng thái trận đấu.</p>
+                </div>
+                <div class="card" style="cursor:pointer; display:flex; flex-direction:column; align-items:center; text-align:center; padding: 40px 20px; border-top: 4px solid #F5A623;" onclick="window.location.href='admin-event.html'">
+                    <span style="font-size: 3rem; margin-bottom:15px;">⏱️</span>
+                    <h3>Cập Nhật Diễn Biến</h3>
+                    <p style="color:var(--text-muted); font-size:0.9rem; margin-top:10px;">Thêm bàn thắng, thẻ phạt timeline thời gian thực.</p>
+                </div>
+                <div class="card" style="cursor:pointer; display:flex; flex-direction:column; align-items:center; text-align:center; padding: 40px 20px; border-top: 4px solid var(--accent-red);" onclick="window.location.href='admin-chat.html'">
+                    <span style="font-size: 3rem; margin-bottom:15px;">🛡️</span>
+                    <h3>Kiểm Duyệt Chat</h3>
+                    <p style="color:var(--text-muted); font-size:0.9rem; margin-top:10px;">Xóa tin nhắn, cấm tài khoản vi phạm live chat.</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="auth.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAdminAuth();
+            const user = JSON.parse(sessionStorage.getItem('admin_session'));
+            document.getElementById('welcomeMsg').textContent = `👋 Xin chào, ${user.displayName}`;
+        });
+    </script>
+</body>
+</html>

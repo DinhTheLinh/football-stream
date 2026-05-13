@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản Lý Trận Đấu</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="admin-wrapper">
+        <aside class="admin-sidebar">
+            <div class="logo">⚽ AdminPanel</div>
+            <nav class="admin-nav">
+                <a href="admin-dashboard.html">📊 Tổng Quan Dashboard</a>
+                <a href="admin-match.html" class="active">🏟️ Quản Lý Trận Đấu</a>
+                <a href="admin-event.html">⏱️ Cập Nhật Events</a>
+                <a href="admin-chat.html">🛡️ Kiểm Duyệt Chat</a>
+            </nav>
+            <div style="padding: 20px;">
+                <button class="btn-danger" style="width: 100%;" onclick="logoutAdmin()">🚪 Đăng xuất</button>
+            </div>
+        </aside>
+
+        <main class="admin-main">
+            <div class="admin-header">
+                <h2>Quản Lý Trận Đấu</h2>
+                <button class="btn-primary" onclick="openMatchModal()">+ Thêm Trận Mới</button>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th><th>Đội nhà</th><th>Đội khách</th><th>Giải/Sân</th><th>Tỉ số</th><th>Trạng thái</th><th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="matchTableBody"></tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <div class="modal" id="matchModal">
+        <div class="modal-content">
+            <div class="modal-header" id="modalTitle">Thêm Trận Đấu Mới</div>
+            <div id="formError" style="color:var(--accent-red); display:none; margin-bottom:15px; padding: 10px; background: rgba(255,59,48,0.1); border-radius:6px; font-size:0.9rem;"></div>
+            
+            <label style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 5px; display: block;">Đội nhà</label>
+            <select id="homeTeam"></select>
+            
+            <label style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 5px; display: block;">Đội khách</label>
+            <select id="awayTeam"></select>
+            
+            <label style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 5px; display: block;">Giải đấu</label>
+            <select id="league"></select>
+            
+            <label style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 5px; display: block;">Thời gian bắt đầu</label>
+            <input type="datetime-local" id="startTime">
+            
+            <label style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 5px; display: block;">Trạng thái</label>
+            <select id="status">
+                <option value="Upcoming">Sắp diễn ra</option>
+                <option value="Live">Trực tiếp</option>
+                <option value="Finished">Kết thúc</option>
+            </select>
+            
+            <div class="modal-actions">
+                <button class="btn-secondary" onclick="closeMatchModal()">Hủy</button>
+                <button class="btn-primary" onclick="saveMatch()">Lưu Trận Đấu</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="auth.js"></script>
+    <script>
+        let currentEditId = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAdminAuth();
+            renderTable();
+            populateSelects();
+        });
+
+        function populateSelects() {
+            const h = document.getElementById('homeTeam');
+            const a = document.getElementById('awayTeam');
+            const l = document.getElementById('league');
+            
+            const teamOpts = window.db.tblTeam.map(t => `<option value="${t.teamId}">${t.name}</option>`).join('');
+            h.innerHTML = teamOpts; a.innerHTML = teamOpts;
+            l.innerHTML = window.db.tblLeague.map(lg => `<option value="${lg.leagueID}">${lg.name}</option>`).join('');
+        }
+
+        function getTeamName(id) { return window.db.tblTeam.find(t => t.teamId === id)?.shortName || ''; }
+
+        function renderTable() {
+            const tbody = document.getElementById('matchTableBody');
+            tbody.innerHTML = '';
+            window.db.tblMatch.forEach(m => {
+                let badgeClass = m.status === 'Live' ? 'badge-live' : (m.status === 'Upcoming' ? 'badge-upcoming' : 'badge-finished');
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="color:var(--text-muted);">#${m.matchId}</td>
+                        <td style="font-weight:600;">${getTeamName(m.homeTeamId)}</td>
+                        <td style="font-weight:600;">${getTeamName(m.awayTeamId)}</td>
+                        <td style="color:var(--text-muted); font-size:0.9rem;">${m.stadium}</td>
+                        <td style="font-size:1.2rem; font-weight:800; color:var(--accent-green);">${m.homeScore} - ${m.awayScore}</td>
+                        <td><span class="status-badge ${badgeClass}">${m.status}</span></td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-warning" onclick="editMatch(${m.matchId})">Sửa</button>
+                                <button class="btn-danger" onclick="deleteMatch(${m.matchId})">Xóa</button>
+                                ${m.status === 'Upcoming' ? `<button class="btn-primary" onclick="changeStatus(${m.matchId}, 'Live')">Tới Live</button>` : ''}
+                                ${m.status === 'Live' ? `<button class="btn-secondary" onclick="changeStatus(${m.matchId}, 'Finished')">Kết Thúc</button>` : ''}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function openMatchModal() {
+            currentEditId = null;
+            document.getElementById('modalTitle').textContent = "Thêm Trận Đấu Mới";
+            document.getElementById('formError').style.display = 'none';
+            document.getElementById('matchModal').classList.add('active');
+        }
+        function closeMatchModal() { document.getElementById('matchModal').classList.remove('active'); }
+
+        function saveMatch() {
+            const h = parseInt(document.getElementById('homeTeam').value);
+            const a = parseInt(document.getElementById('awayTeam').value);
+            const st = document.getElementById('startTime').value;
+            const stat = document.getElementById('status').value;
+            const err = document.getElementById('formError');
+
+            if (!st) { err.textContent = "Vui lòng nhập đầy đủ thông tin."; err.style.display='block'; return; }
+            if (h === a) { err.textContent = "Đội nhà và đội khách không được trùng nhau."; err.style.display='block'; return; }
+
+            // Validate duplicate (bỏ qua nếu đang edit chính nó)
+            const isDup = window.db.tblMatch.some(m => m.homeTeamId === h && m.awayTeamId === a && m.startTime === st && m.matchId !== currentEditId);
+            if(isDup) { err.textContent = "Trận đấu này đã tồn tại."; err.style.display='block'; return; }
+
+            if (currentEditId) {
+                const idx = window.db.tblMatch.findIndex(m => m.matchId === currentEditId);
+                window.db.tblMatch[idx].homeTeamId = h;
+                window.db.tblMatch[idx].awayTeamId = a;
+                window.db.tblMatch[idx].status = stat;
+            } else {
+                window.db.tblMatch.push({
+                    matchId: Date.now(),
+                    homeTeamId: h, awayTeamId: a, stadium: "Unknown",
+                    status: stat, homeScore: 0, awayScore: 0, currentTime: "00:00",
+                    startTime: st,
+                    tblLiveChatID: Date.now()
+                });
+            }
+            window.saveData();
+            closeMatchModal();
+            renderTable();
+            window.showToast("Cập nhật thành công!");
+        }
+
+        function editMatch(id) {
+            currentEditId = id;
+            const m = window.db.tblMatch.find(x => x.matchId === id);
+            document.getElementById('modalTitle').textContent = "Sửa Trận Đấu";
+            document.getElementById('formError').style.display = 'none';
+            document.getElementById('homeTeam').value = m.homeTeamId;
+            document.getElementById('awayTeam').value = m.awayTeamId;
+            document.getElementById('status').value = m.status;
+            document.getElementById('matchModal').classList.add('active');
+        }
+
+        function deleteMatch(id) {
+            if(confirm("Bạn có chắc chắn muốn xóa trận đấu này?")) {
+                window.db.tblMatch = window.db.tblMatch.filter(m => m.matchId !== id);
+                window.saveData();
+                renderTable();
+                window.showToast("Đã xóa trận đấu.");
+            }
+        }
+
+        function changeStatus(id, newStatus) {
+            const idx = window.db.tblMatch.findIndex(m => m.matchId === id);
+            window.db.tblMatch[idx].status = newStatus;
+            window.saveData();
+            renderTable();
+            window.showToast("Đã đổi trạng thái.");
+        }
+    </script>
+</body>
+</html>

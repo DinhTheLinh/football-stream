@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi Tiết Trận Đấu - ELITE STADIUM</title>
+    <!-- Import font Inter giống thiết kế -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style/match-detail.css">
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="logo">ELITE STADIUM</div>
+        <div class="search-bar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            <input type="text" placeholder="Search matches...">
+        </div>
+        <div class="nav-icons">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <div class="match-layout">
+        <!-- LEFT PANEL -->
+        <div class="left-panel">
+            <!-- Scoreboard -->
+            <div class="scoreboard" id="matchHeader">
+                <!-- JS Render -->
+            </div>
+
+            <!-- Video Player -->
+            <div class="video-container">
+                <img src="imgs/image.png" alt="Stadium">
+            </div>
+
+            <!-- Server Actions -->
+            <div class="server-actions">
+                <span>Source:</span>
+                <div style="display: flex; gap: 12px;" id="serverList">
+                    <!-- JS Render -->
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL (CHAT) -->
+        <div class="right-panel">
+            <div class="chat-header">
+                <div class="chat-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                    Live Chat
+                </div>
+                <div class="viewers">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+                    14.2k
+                </div>
+            </div>
+            
+            <div class="chat-messages" id="chatBox">
+                <!-- JS Render -->
+            </div>
+
+            <div class="chat-input-area">
+                <div class="chat-input-wrapper">
+                    <input type="text" id="chatInput" placeholder="Send a message..." onkeypress="if(event.key==='Enter') sendChat()">
+                    <button onclick="sendChat()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JS LOGIC -->
+    <script>
+        // Fake DB chuẩn phong cách của ông
+        window.db = window.db || { 
+            tblMatch: [{matchId: 1, homeTeamId: 1, awayTeamId: 2, status: 'Live', homeScore: 2, awayScore: 1, currentTime: 'Q3 - 12:45', tblLiveChatID: 1}],
+            tblTeam: [{teamId: 1, name: 'Manchester United'}, {teamId: 2, name: 'Chelsea'}],
+            tblLinkStream: [{matchId: 1, url: '#', serverName: 'Server 1'}, {matchId: 1, url: '#', serverName: 'Server 2'}],
+            tblCommentDetail: [
+                {tblLiveChatID: 1, tblUserID: 4, content: "What a brilliant play! Let's go!", status: "Visible", time: "10:00"},
+                {tblLiveChatID: 1, tblUserID: 3, content: "Please keep the chat respectful.\nEnjoy the match!", status: "Visible", time: "10:01"},
+                {tblLiveChatID: 1, tblUserID: 5, content: "That was too close.", status: "Visible", time: "10:02"},
+                {tblLiveChatID: 1, tblUserID: 6, content: "Sub him out already.", status: "Visible", time: "10:03"}
+            ]
+        };
+
+        const matchId = 1; 
+        const match = window.db.tblMatch.find(m => m.matchId === matchId);
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderHeader();
+            renderServers();
+            renderChat();
+        });
+
+        function getTeam(id) { return window.db.tblTeam.find(t => t.teamId === id) || {name: "Unknown"}; }
+        function formatScore(score) { return score < 10 ? `0${score}` : score; }
+
+        function renderHeader() {
+            const home = getTeam(match.homeTeamId);
+            const away = getTeam(match.awayTeamId);
+            
+            document.getElementById('matchHeader').innerHTML = `
+                <div class="live-indicator">
+                    <div class="live-dot"></div> LIVE
+                </div>
+                <div class="score-center">
+                    <div class="team-info">
+                        <div class="team-name">${home.name}</div>
+                        <div class="team-score score-home">${formatScore(match.homeScore)}</div>
+                    </div>
+                    <div class="score-vs">VS</div>
+                    <div class="team-info">
+                        <div class="team-name">${away.name}</div>
+                        <div class="team-score">${formatScore(match.awayScore)}</div>
+                    </div>
+                </div>
+                <div class="match-time">${match.currentTime}</div>
+            `;
+        }
+
+        function renderServers() {
+            const links = window.db.tblLinkStream.filter(l => l.matchId === matchId);
+            const srvBox = document.getElementById('serverList');
+            srvBox.innerHTML = ''; 
+            
+            links.forEach((l, i) => {
+                const isActive = i === 0 ? 'active' : '';
+                srvBox.innerHTML += `
+                    <button class="server-btn ${isActive}" onclick="changeServer('${l.url}', this)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></svg>
+                        ${l.serverName}
+                    </button>`;
+            });
+        }
+
+        function changeServer(url, btnElement) {
+            const btns = document.getElementById('serverList').querySelectorAll('button');
+            btns.forEach(b => b.classList.remove('active'));
+            btnElement.classList.add('active');
+        }
+
+        function renderChat() {
+            const msgs = window.db.tblCommentDetail.filter(c => c.tblLiveChatID === match.tblLiveChatID);
+            const box = document.getElementById('chatBox');
+            
+            box.innerHTML = msgs.map(m => {
+                // Giả lập ID 3 là Admin/Moderator
+                const isAdmin = m.tblUserID === 3;
+                let userName = "";
+                if(m.tblUserID === 4) userName = "User_8921";
+                else if(m.tblUserID === 5) userName = "SoccerFan99";
+                else if(m.tblUserID === 6) userName = "EliteWatcher";
+                
+                const modClass = isAdmin ? "mod" : "";
+                const userHtml = isAdmin 
+                    ? `<div class="msg-user">
+                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                         Moderator
+                       </div>`
+                    : `<div class="msg-user">${userName}</div>`;
+
+                return `
+                    <div class="msg-bubble ${modClass}">
+                        ${userHtml}
+                        <div class="msg-text">${m.content.replace('\n', '<br>')}</div>
+                    </div>`;
+            }).join('');
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function sendChat() {
+            const input = document.getElementById('chatInput');
+            const text = input.value.trim();
+            if (!text) return;
+            window.db.tblCommentDetail.push({
+                tblLiveChatID: match.tblLiveChatID, tblUserID: 4, content: text, status: "Visible"
+            });
+            input.value = '';
+            renderChat();
+        }
+    </script>
+</body>
+</html>

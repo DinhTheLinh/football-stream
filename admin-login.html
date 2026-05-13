@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Đăng Nhập Quản Trị - LiveStreamHD</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .login-container { max-width: 420px; margin: 150px auto; padding: 40px; box-shadow: 0 20px 60px rgba(0,0,0,0.6); position: relative; overflow: hidden; }
+        .login-container::before { content: ''; position: absolute; top:-50%; left:-50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(0,255,133,0.1) 0%, transparent 50%); pointer-events: none;}
+    </style>
+</head>
+<body>
+    <div class="container login-container card">
+        <h2 style="text-align: center; margin-bottom: 5px; font-size: 1.8rem; font-weight:800;">ADMIN PORTAL</h2>
+        <p style="text-align: center; color: var(--text-muted); margin-bottom: 30px;">Hệ thống Quản Trị LiveStreamHD</p>
+        
+        <div id="errorMsg" style="color:var(--accent-red); margin-bottom: 15px; display:none; background: rgba(255,59,48,0.1); padding: 10px; border-radius: 6px; font-size: 0.9rem; text-align: center;">Tên đăng nhập hoặc mật khẩu không đúng.</div>
+        
+        <label style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 5px; display: block;">Tên đăng nhập</label>
+        <input type="text" id="username" placeholder="admin01">
+        
+        <label style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 5px; display: block; margin-top: 10px;">Mật khẩu</label>
+        <input type="password" id="password" placeholder="••••••••" onkeypress="if(event.key==='Enter') tryLogin()">
+        
+        <button class="btn-primary" style="width:100%; margin-top: 20px; padding: 12px; font-size: 1rem;" onclick="tryLogin()">Đăng Nhập Hệ Thống</button>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="auth.js"></script>
+    <script>
+        function tryLogin() {
+            const u = document.getElementById('username').value;
+            const p = document.getElementById('password').value;
+            if (loginAdmin(u, p)) {
+                window.location.href = 'admin-dashboard.html';
+            } else {
+                document.getElementById('errorMsg').style.display = 'block';
+            }
+        }
+    </script>
+</body>
+</html>

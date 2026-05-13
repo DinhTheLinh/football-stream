@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Cập Nhật Diễn Biến</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="admin-wrapper">
+        <aside class="admin-sidebar">
+            <div class="logo">⚽ AdminPanel</div>
+            <nav class="admin-nav">
+                <a href="admin-dashboard.html">📊 Tổng Quan Dashboard</a>
+                <a href="admin-match.html">🏟️ Quản Lý Trận Đấu</a>
+                <a href="admin-event.html" class="active">⏱️ Cập Nhật Events</a>
+                <a href="admin-chat.html">🛡️ Kiểm Duyệt Chat</a>
+            </nav>
+            <div style="padding: 20px;">
+                <button class="btn-danger" style="width: 100%;" onclick="logoutAdmin()">🚪 Đăng xuất</button>
+            </div>
+        </aside>
+
+        <main class="admin-main">
+            <div class="admin-header">
+                <h2>Cập Nhật Diễn Biến Trận Đấu</h2>
+            </div>
+
+            <div class="grid-layout">
+                <div class="card" style="box-shadow: none;">
+                    <h3 style="margin-bottom: 20px;">🔴 Chọn Trận Đang Live</h3>
+                    <div id="liveMatchList" style="display: flex; flex-direction: column; gap: 10px;"></div>
+                </div>
+                
+                <div class="card" id="eventPanel" style="display:none; box-shadow: none; border-color: var(--accent-green);">
+                    <h3 id="epMatchName" style="color: var(--accent-green); text-align: center;"></h3>
+                    <p style="font-size:2.5rem; text-align:center; font-weight: 800; letter-spacing: 2px;" id="epScore"></p>
+                    <button class="btn-primary" onclick="openEventModal()" style="width:100%; margin: 25px 0; padding: 15px; font-size: 1.1rem;">+ Ghi nhận sự kiện</button>
+                    
+                    <h4 style="margin-bottom: 10px; color: var(--text-muted); border-bottom: 1px solid var(--glass-border); padding-bottom: 10px;">Timeline Trận Đấu</h4>
+                    <div id="timelineList" style="display: flex; flex-direction: column; gap: 8px;"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Form -->
+    <div class="modal" id="eventModal">
+        <div class="modal-content">
+            <div class="modal-header">Thêm Sự Kiện Mới</div>
+            <div id="formError" style="color:var(--accent-red); display:none; margin-bottom:15px; padding: 10px; background: rgba(255,59,48,0.1); border-radius:6px; font-size:0.9rem;"></div>
+            
+            <label style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 5px; display: block;">Loại sự kiện</label>
+            <select id="evType">
+                <option value="Goal">Bàn thắng ⚽</option>
+                <option value="Yellow Card">Thẻ vàng 🟨</option>
+                <option value="Red Card">Thẻ đỏ 🟥</option>
+                <option value="Substitution">Thay người 🔄</option>
+            </select>
+            
+            <label style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 5px; display: block;">Phút thứ (VD: 45)</label>
+            <input type="number" id="evMinute" placeholder="Phút thi đấu...">
+            
+            <label style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 5px; display: block;">Cầu thủ chính</label>
+            <select id="evPlayerMain"><option value="">Chọn cầu thủ chính...</option></select>
+            
+            <div class="modal-actions" style="margin-top: 20px;">
+                <button class="btn-secondary" onclick="closeEventModal()">Hủy</button>
+                <button class="btn-primary" onclick="saveEvent()">Lưu Sự Kiện</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="auth.js"></script>
+    <script>
+        let selectedMatchId = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAdminAuth();
+            renderLiveMatches();
+        });
+
+        function renderLiveMatches() {
+            const lives = window.db.tblMatch.filter(m => m.status === 'Live');
+            const list = document.getElementById('liveMatchList');
+            list.innerHTML = lives.map(m => {
+                const hn = window.db.tblTeam.find(t=>t.teamId === m.homeTeamId).name;
+                const an = window.db.tblTeam.find(t=>t.teamId === m.awayTeamId).name;
+                return `<button class="btn-secondary" style="width:100%; text-align:left; justify-content: flex-start; font-size: 1.05rem;" onclick="selectMatch(${m.matchId})">${hn} vs ${an} <span style="margin-left:auto; color:var(--accent-green);">${m.homeScore}-${m.awayScore}</span></button>`;
+            }).join('');
+            if (lives.length === 0) list.innerHTML = "<p style='color:var(--text-muted);'>Không có trận nào đang diễn ra.</p>";
+        }
+
+        function selectMatch(id) {
+            selectedMatchId = id;
+            document.getElementById('eventPanel').style.display = 'block';
+            updateEventPanel();
+            
+            // Tải danh sách cầu thủ cho trận này
+            const m = window.db.tblMatch.find(x => x.matchId === id);
+            const players = window.db.tblPlayer.filter(p => p.teamId === m.homeTeamId || p.teamId === m.awayTeamId);
+            const sel = document.getElementById('evPlayerMain');
+            sel.innerHTML = '<option value="">Chọn cầu thủ chính...</option>' + players.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+        }
+
+        function updateEventPanel() {
+            const m = window.db.tblMatch.find(x => x.matchId === selectedMatchId);
+            const hn = window.db.tblTeam.find(t=>t.teamId === m.homeTeamId).name;
+            const an = window.db.tblTeam.find(t=>t.teamId === m.awayTeamId).name;
+            document.getElementById('epMatchName').textContent = `${hn} vs ${an}`;
+            document.getElementById('epScore').textContent = `${m.homeScore} - ${m.awayScore}`;
+
+            const events = window.db.tblMatchEvent.filter(e => e.matchId === selectedMatchId).sort((a,b)=>b.minute - a.minute);
+            let eventIcons = { "Goal": "⚽", "Yellow Card": "🟨", "Red Card": "🟥", "Substitution": "🔄" };
+            
+            document.getElementById('timelineList').innerHTML = events.map(e => `
+                <div style="background: rgba(255,255,255,0.03); padding: 12px 15px; border-radius: 8px; display: flex; align-items: center; gap: 15px;">
+                    <span style="font-weight: 700; color: var(--accent-green); min-width: 60px;">Phút ${e.minute}'</span>
+                    <span style="font-size: 1.2rem;">${eventIcons[e.type]}</span>
+                    <span>${window.db.tblPlayer.find(p=>p.id==e.playerId)?.name || 'Unknown'}</span>
+                </div>
+            `).join('');
+            
+            if (!events.length) document.getElementById('timelineList').innerHTML = "<p style='color:var(--text-muted); font-size:0.9rem;'>Chưa có sự kiện nào.</p>";
+        }
+
+        function openEventModal() { 
+            document.getElementById('formError').style.display = 'none';
+            document.getElementById('eventModal').classList.add('active'); 
+        }
+        function closeEventModal() { document.getElementById('eventModal').classList.remove('active'); }
+
+        function saveEvent() {
+            const err = document.getElementById('formError');
+            const type = document.getElementById('evType').value;
+            const minute = parseInt(document.getElementById('evMinute').value);
+            const ply = document.getElementById('evPlayerMain').value;
+
+            if (!type || !minute || !ply) { err.textContent="Vui lòng nhập đầy đủ thông tin sự kiện."; err.style.display='block'; return;}
+            if (minute <= 0) { err.textContent="Phút thi đấu phải là số nguyên dương hợp lệ."; err.style.display='block'; return;}
+
+            window.db.tblMatchEvent.push({ id: Date.now(), matchId: selectedMatchId, type: type, minute: minute, playerId: parseInt(ply) });
+            
+            // Xử lý logic tăng bàn thắng
+            if (type === 'Goal') {
+                const m = window.db.tblMatch.find(x => x.matchId === selectedMatchId);
+                const teamId = window.db.tblPlayer.find(x => x.id == ply).teamId;
+                if (teamId === m.homeTeamId) m.homeScore++; else m.awayScore++;
+            }
+
+            window.saveData();
+            closeEventModal();
+            updateEventPanel();
+            renderLiveMatches(); // Cập nhật lại list gốc nếu điểm số đổi
+            window.showToast("Đã lưu sự kiện thành công.");
+        }
+    </script>
+</body>
+</html>
