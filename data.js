@@ -51,6 +51,7 @@ function loadData() {
         { leagueID: 10, name: "Premier League", logo: "🏴󠁧󠁢󠁥󠁮󠁧󠁿" },
         { leagueID: 11, name: "La Liga", logo: "🇪🇸" }
       ],
+      tblGuest: [],
       tblPlayer: [
         // MU (1)
         { id: 101, teamId: 1, name: "Bruno Fernandes", isStarter: true },

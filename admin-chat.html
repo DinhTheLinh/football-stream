@@ -138,6 +138,10 @@
             if(localStorage.getItem('footballDB')) {
                 window.db = JSON.parse(localStorage.getItem('footballDB'));
             }
+            // Đảm bảo tblGuest tồn tại
+            if(!window.db.tblGuest) {
+                window.db.tblGuest = [];
+            }
             renderLiveMatches();
         });
 
@@ -267,6 +271,11 @@
             const duration = document.getElementById('banDuration').value;
             const reason = document.getElementById('banReason').value;
             
+            // Đảm bảo tblGuest tồn tại
+            if(!window.db.tblGuest) {
+                window.db.tblGuest = [];
+            }
+            
             // Tìm user trong tblGuest (Nếu chưa có thì thêm mới vào mock data để demo)
             let guest = window.db.tblGuest.find(g => g.tblUserID === selectedUserId);
             if(!guest) {
@@ -281,11 +290,16 @@
             handleDeleteMsg(); 
 
             closeModal('banModal');
-            showToast("Xử lý vi phạm thành công.");
+            showToast("Đã cấm người dùng " + selectedUserId);
+            window.saveData();
         }
 
         // --- 7. CHỨC NĂNG: DANH SÁCH BỊ CẤM & GỠ CẤM (Bước 4a) ---
         function openBanListModal() {
+            // Đảm bảo tblGuest tồn tại
+            if(!window.db.tblGuest) {
+                window.db.tblGuest = [];
+            }
             const tbody = document.getElementById('banListTableBody');
             const bannedUsers = window.db.tblGuest.filter(g => g.status === 'Banned');
             
@@ -305,11 +319,15 @@
         }
 
         function unbanUser(userId) {
+            if(!window.db.tblGuest) {
+                window.db.tblGuest = [];
+            }
             const guest = window.db.tblGuest.find(g => g.tblUserID === userId);
             if(guest) {
                 guest.status = 'Active';
                 guest.banReason = null;
                 showToast("Đã gỡ cấm người dùng.");
+                window.saveData();
                 openBanListModal(); // Render lại bảng
             }
         }
