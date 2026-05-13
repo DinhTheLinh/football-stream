@@ -1,14 +1,17 @@
 // data.js
 
-
+//localStorage.removeItem('livestream_data');
 if (!localStorage.getItem('livestream_data')) {
   const initialData = {
     tblUser: [
       { userID: 1, displayName: "Nguyen Van A", role: "Guest" },
       { userID: 2, displayName: "Ong bap cay", role: "Guest" },
-      { userID: 3, displayName: "Admin Linh", role: "Admin" }
+      { userID: 3, displayName: "Admin Linh", role: "Admin" },
+      { userID: 4, displayName: "Admin k", role: "Admin" }
     ],
-    tblAdmin: [{ ID: 1, tblUserID: 3, username: "admin01", password: "admin@123" }],
+    tblAdmin: [{ ID: 1, tblUserID: 3, username: "admin01", password: "admin@123" },
+              { ID: 2, tblUserID: 4, username: "a", password: "1" }
+    ],
     tblTeam: [
       { teamId: 1, name: "Manchester United", shortName: "MU", logo: "🔴" },
       { teamId: 2, name: "Chelsea", shortName: "CHE", logo: "🔵" },
