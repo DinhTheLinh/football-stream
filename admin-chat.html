@@ -32,7 +32,8 @@
     <div id="moderationView">
         <div class="left-panel">
             <div class="video-container">
-                <h3 id="videoTitle">Đang phát Stream...</h3>
+                <img src="imgs/image.png" alt="Stadium" id="streamImage">
+                <h3 id="videoTitle" style="position: absolute; bottom: 20px; left: 20px; background: rgba(0,0,0,0.7); padding: 10px 15px; border-radius: 8px;">Đang phát Stream...</h3>
             </div>
         </div>
         <div class="right-panel">
@@ -122,32 +123,10 @@
     <!-- TOAST NOTIFICATION -->
     <div id="toast">Thao tác thành công</div>
 
+    <script src="data.js"></script>
+    <script src="auth.js"></script>
     <script>
-        // --- 1. MOCK DATA (Thay bằng data.js của bạn) ---
-        window.db = window.db || { 
-            tblMatch: [
-                {matchId: 1, homeTeamId: 1, awayTeamId: 2, status: 'Live', homeScore: 2, awayScore: 1, tblLiveChatID: 1},
-                {matchId: 2, homeTeamId: 3, awayTeamId: 4, status: 'Live', homeScore: 0, awayScore: 0, tblLiveChatID: 2}
-            ],
-            tblTeam: [{teamId: 1, name: 'MU'}, {teamId: 2, name: 'Chelsea'}, {teamId: 3, name: 'Arsenal'}, {teamId: 4, name: 'Man City'}],
-            tblCommentDetail: [
-                {ID: 1, tblLiveChatID: 1, tblUserID: 'User_101', content: "Trọng tài bắt chán thế!", status: "Visible"},
-                {ID: 2, tblLiveChatID: 1, tblUserID: 'User_999', content: "Link cá độ bong88 tại đây anh em ơi!!!", status: "Visible"},
-                {ID: 3, tblLiveChatID: 1, tblUserID: 'User_102', content: "Chơi hay quá!", status: "Visible"},
-                {ID: 4, tblLiveChatID: 2, tblUserID: 'User_103', content: "Trận này chắc hòa thôi.", status: "Visible"},
-                {ID: 5, tblLiveChatID: 2, tblUserID: 'User_104', content: "Doi bong toi yeu", status: "Visible"},
-                {ID: 6, tblLiveChatID: 2, tblUserID: 'User_999', content: "Cá độ bóng đá uy tín tại bong88, anh em vào xem nào!!!", status: "Visible"},
-                {ID: 7, tblLiveChatID: 1, tblUserID: 'User_105', content: "Cấm thằng User_999 này đi admin ơi, spam link cá độ hoài!", status: "Visible"},
-                {ID: 8, tblLiveChatID: 2, tblUserID: 'User_106', content: "Quả đấy chuyền thì có bàn rồi", status: "Visible"},
-                {ID: 9, tblLiveChatID: 2, tblUserID: 'User_107', content: "Thua rồi thua rồi :(", status: "Visible"},
-                {ID: 10, tblLiveChatID: 1, tblUserID: 'User_108', content: "Không thắng hôm nay thì bao giờ thắng đây", status: "Visible"}
-            ],
-            tblGuest: [
-                {id: 1, tblUserID: 'User_999', status: 'Active', banReason: null} // Mock user bảng guest
-            ]
-        };
-
-        // --- 2. BIẾN TOÀN CỤC ---
+        // --- 1. BIẾN TOÀN CỤC ---
         let currentMatchId = null;
         let currentChatId = null;
         let selectedMsgId = null;
@@ -155,11 +134,20 @@
         let chatInterval = null;
 
         document.addEventListener('DOMContentLoaded', () => {
+            // Reload dữ liệu từ localStorage để lấy những thay đổi mới từ admin-match.html
+            if(localStorage.getItem('footballDB')) {
+                window.db = JSON.parse(localStorage.getItem('footballDB'));
+            }
             renderLiveMatches();
         });
 
         // --- 3. ĐIỀU HƯỚNG GIAO DIỆN ---
         function renderLiveMatches() {
+            // Reload dữ liệu từ localStorage mỗi lần render
+            if(localStorage.getItem('footballDB')) {
+                window.db = JSON.parse(localStorage.getItem('footballDB'));
+            }
+            
             const grid = document.getElementById('liveMatchGrid');
             const liveMatches = window.db.tblMatch.filter(m => m.status === 'Live');
             
@@ -176,6 +164,11 @@
         }
 
         function openModeration(matchId, chatId, title) {
+            // Reload dữ liệu từ localStorage trước khi render chat
+            if(localStorage.getItem('footballDB')) {
+                window.db = JSON.parse(localStorage.getItem('footballDB'));
+            }
+            
             currentMatchId = matchId;
             currentChatId = chatId;
             document.getElementById('matchListView').style.display = 'none';
@@ -184,7 +177,28 @@
             document.getElementById('videoTitle').innerText = "Trực tiếp: " + title;
             
             renderChat();
-            chatInterval = setInterval(renderChat, 3000); // Tự động làm mới chat
+            
+            // Xóa interval cũ nếu có để tránh chạy nhiều luồng
+            if(chatInterval) clearInterval(chatInterval);
+            
+            chatInterval = setInterval(() => {
+                // Tự động fake 1 tin nhắn mới ngẫu nhiên (năng động như thật)
+                if(Math.random() > 0.6) { // 40% cơ hội mỗi 3s sẽ có comment mới
+                    const phrases = ["Ghi bàn điiiii", "Defend kém quá", "Cố lên!", "Sút hay lắm!", "Phạm lỗi kìa thề", "Việt vị rõ ràng!", "F88 nhà cái hàng đâù Việt Nam", "Xem mượt phết anh em ạ", "Thay người đi", "Vào rồiiiii!!!!"];
+                    const randomPhrase = phrases[Math.floor(Math.random() * phrases.length)];
+                    window.db.tblCommentDetail.push({
+                        ID: Date.now(),
+                        tblLiveChatID: currentChatId,
+                        tblUserID: 'Khán giả_' + Math.floor(Math.random() * 999), 
+                        content: randomPhrase,
+                        time: new Date().toISOString(),
+                        status: "Visible"
+                    });
+                    // Chú ý: Không lưu saveData() để tránh nặng file data.js quá mức, chỉ hiển thị tạm thời trên RAM
+                }
+                
+                renderChat();
+            }, 3000); 
         }
 
         function goBack() {

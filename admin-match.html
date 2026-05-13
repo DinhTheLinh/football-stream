@@ -147,12 +147,38 @@
                 window.db.tblMatch[idx].awayTeamId = a;
                 window.db.tblMatch[idx].status = stat;
             } else {
+                const newChatId = Date.now();
                 window.db.tblMatch.push({
                     matchId: Date.now(),
                     homeTeamId: h, awayTeamId: a, stadium: "Unknown",
                     status: stat, homeScore: 0, awayScore: 0, currentTime: "00:00",
                     startTime: st,
-                    tblLiveChatID: Date.now()
+                    tblLiveChatID: newChatId
+                });
+                
+                // MÔ PHỎNG BÌNH LUẬN NGAY KHI TẠO TRẬN ĐẤU MỚI
+                const fakeComments = [
+                    "Trận này xem vẻ căng đấy anh em!",
+                    "Dự đoán đội nhà thắng 2-0 dễ dàng.",
+                    "Trọng tài hôm nay bắt gắt không nhỉ?",
+                    "Lên anh em ơi, cố lên!!!",
+                    "Đá thế này thì mất điểm lại đổ tại...",
+                    "Chuyền quả quá đẹp, tiếc là không vào :(",
+                    "Có ai bị lag không, hình như mạng bị chậm?",
+                    "Cá độ bóng đá uy tín tại... (Spam)",
+                    "Phòng ngự như mơ ngủ thế kia á!?",
+                    "SIUUUUUUUUUUUUUUUUUUU"
+                ];
+                let timeOffset = 0;
+                fakeComments.forEach((c, index) => {
+                    window.db.tblCommentDetail.push({
+                        ID: Date.now() + index,
+                        tblLiveChatID: newChatId,
+                        tblUserID: 'User_' + (Math.floor(Math.random() * 900) + 100),
+                        content: c,
+                        time: new Date(Date.now() - 1000 * (10 - index)).toISOString(), // cách nhau 1s fake
+                        status: "Visible"
+                    });
                 });
             }
             window.saveData();
