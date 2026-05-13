@@ -45,7 +45,7 @@
             </div>
             <div class="chat-actions">
                 <button class="btn btn-secondary" onclick="openBanListModal()">DS Bị Cấm</button>
-                <button class="btn btn-danger" onclick="alert('Đã xóa toàn bộ chat!')">Clear All</button>
+                <button class="btn btn-danger" onclick="clearAllChat()">Clear All</button>
             </div>
         </div>
     </div>
@@ -297,6 +297,18 @@
                 guest.banReason = null;
                 showToast("Đã gỡ cấm người dùng.");
                 openBanListModal(); // Render lại bảng
+            }
+        }
+
+        // --- 8. CHỨC NĂNG: XÓA TOÀN BỘ CHAT ---
+        function clearAllChat() {
+            if(confirm('Bạn chắc chắn muốn xóa tất cả tin nhắn trong phòng chat này?')) {
+                const msgs = window.db.tblCommentDetail.filter(c => c.tblLiveChatID === currentChatId);
+                msgs.forEach(m => {
+                    m.status = "Hidden"; // Đánh dấu ẩn tất cả
+                });
+                renderChat();
+                showToast("Đã xóa tất cả tin nhắn.");
             }
         }
 
