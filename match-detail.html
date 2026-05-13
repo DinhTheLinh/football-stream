@@ -95,6 +95,20 @@
         renderChat();
     });
 
+    // Tự động cập nhật dữ liệu khi có thay đổi từ tab khác (Admin hoặc người xem khác)
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'livestream_data') {
+            // Nạp lại dữ liệu mới nhất
+            window.db = JSON.parse(e.newValue);
+            
+            // Vẽ lại khung chat ngay lập tức với bình luận mới
+            renderChat();
+            
+            // Tự động cập nhật luôn cả tỉ số, thẻ phạt nếu Admin vừa thay đổi
+            renderHeader(); 
+        }
+    });
+
     function getTeam(id) { return window.db.tblTeam.find(t => t.teamId === id) || {name: "Unknown"}; }
 
     function renderHeader() {
