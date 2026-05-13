@@ -187,7 +187,7 @@
             
             chatInterval = setInterval(() => {
                 // Tự động fake 1 tin nhắn mới ngẫu nhiên (năng động như thật)
-                if(Math.random() > 0.6) { // 40% cơ hội mỗi 3s sẽ có comment mới
+                if(Math.random() > 0.5) { // 50% cơ hội mỗi 2s sẽ có comment mới
                     const phrases = ["Ghi bàn điiiii", "Defend kém quá", "Cố lên!", "Sút hay lắm!", "Phạm lỗi kìa thề", "Việt vị rõ ràng!", "F88 nhà cái hàng đâù Việt Nam", "Xem mượt phết anh em ạ", "Thay người đi", "Vào rồiiiii!!!!"];
                     const randomPhrase = phrases[Math.floor(Math.random() * phrases.length)];
                     window.db.tblCommentDetail.push({
@@ -202,7 +202,7 @@
                 }
                 
                 renderChat();
-            }, 3000); 
+            }, 2000); 
         }
 
         function goBack() {

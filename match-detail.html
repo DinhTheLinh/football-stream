@@ -98,6 +98,33 @@
             alert("Không tìm thấy trận đấu!");
             return;
         }
+        
+        // Kiểm tra xem người dùng có bị cấm chat không
+        const currentUserNick = sessionStorage.getItem('viewerNick') || "Khách";
+        if (!window.db.tblGuest) {
+            window.db.tblGuest = [];
+        }
+        
+        const bannedUser = window.db.tblGuest.find(g => g.tblUserID === currentUserNick && g.status === 'Banned');
+        const chatInput = document.getElementById('chatInput');
+        
+        if (bannedUser) {
+            // Disable chat input nếu người dùng bị cấm
+            chatInput.disabled = true;
+            chatInput.placeholder = `⛔ Bạn đã bị cấm chat (${bannedUser.banReason || 'Không xác định'})`;
+            chatInput.style.opacity = '0.5';
+            
+            // Hiển thị thông báo cấm trong chat box
+            const chatBox = document.getElementById('chatBox');
+            const banNotice = document.createElement('div');
+            banNotice.style.cssText = 'background: rgba(239, 68, 68, 0.15); color: #ef4444; padding: 16px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ef4444; font-size: 14px; font-weight: 600;';
+            banNotice.innerHTML = `
+                🚫 <strong>Bạn đã bị cấm chat!</strong><br/>
+                <small style="color: var(--text-muted); margin-top: 6px; display: block;">Lý do: ${bannedUser.banReason || 'Không xác định'}</small>
+            `;
+            chatBox.appendChild(banNotice);
+        }
+        
         renderHeader();
         renderServers();
         renderChat();
@@ -194,10 +221,38 @@
         const input = document.getElementById('chatInput');
         if (!input.value.trim()) return;
         
+        const currentUserNick = sessionStorage.getItem('viewerNick') || "Khách";
+        
+        // Kiểm tra xem người dùng có bị cấm hay không
+        if (!window.db.tblGuest) {
+            window.db.tblGuest = [];
+        }
+        
+        const bannedUser = window.db.tblGuest.find(g => g.tblUserID === currentUserNick && g.status === 'Banned');
+        
+        if (bannedUser) {
+            // Hiển thị cảnh báo người dùng bị cấm
+            const chatBox = document.getElementById('chatBox');
+            const banNotice = document.createElement('div');
+            banNotice.style.cssText = 'background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 12px; border-radius: 8px; margin: 10px 0; border-left: 3px solid #ef4444; font-size: 13px;';
+            banNotice.innerHTML = `
+                ⛔ <strong>Bạn đã bị cấm chat!</strong><br/>
+                Lý do: ${bannedUser.banReason || 'Không xác định'}<br/>
+                <small>Liên hệ Admin để gỡ cấm</small>
+            `;
+            chatBox.appendChild(banNotice);
+            chatBox.scrollTop = chatBox.scrollHeight;
+            
+            input.value = '';
+            input.placeholder = "Bạn đã bị cấm chat - Liên hệ Admin";
+            input.disabled = true;
+            return;
+        }
+        
         window.db.tblCommentDetail.push({
             ID: Date.now(),
             tblLiveChatID: match.tblLiveChatID,
-            tblUserID: sessionStorage.getItem('viewerNick') || "Khách",
+            tblUserID: currentUserNick,
             content: input.value,
             status: "Visible"
         });
