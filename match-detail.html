@@ -75,115 +75,88 @@
     </div>
 
     <!-- JS LOGIC -->
-    <script>
-        // Fake DB chuẩn phong cách của ông
-        window.db = window.db || { 
-            tblMatch: [{matchId: 1, homeTeamId: 1, awayTeamId: 2, status: 'Live', homeScore: 2, awayScore: 1, currentTime: 'Q3 - 12:45', tblLiveChatID: 1}],
-            tblTeam: [{teamId: 1, name: 'Manchester United'}, {teamId: 2, name: 'Chelsea'}],
-            tblLinkStream: [{matchId: 1, url: '#', serverName: 'Server 1'}, {matchId: 1, url: '#', serverName: 'Server 2'}],
-            tblCommentDetail: [
-                {tblLiveChatID: 1, tblUserID: 4, content: "What a brilliant play! Let's go!", status: "Visible", time: "10:00"},
-                {tblLiveChatID: 1, tblUserID: 3, content: "Please keep the chat respectful.\nEnjoy the match!", status: "Visible", time: "10:01"},
-                {tblLiveChatID: 1, tblUserID: 5, content: "That was too close.", status: "Visible", time: "10:02"},
-                {tblLiveChatID: 1, tblUserID: 6, content: "Sub him out already.", status: "Visible", time: "10:03"}
-            ]
-        };
+    <script src="data.js"></script>
 
-        const matchId = 1; 
-        const match = window.db.tblMatch.find(m => m.matchId === matchId);
+<script>
+    // 1. Lấy ID từ URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const matchId = parseInt(urlParams.get('id')) || 1; 
 
-        document.addEventListener('DOMContentLoaded', () => {
-            renderHeader();
-            renderServers();
-            renderChat();
+    // 2. Lấy trận đấu từ window.db (đã nạp từ data.js)
+    const match = window.db.tblMatch.find(m => m.matchId === matchId);
+
+    document.addEventListener('DOMContentLoaded', () => {
+        if (!match) {
+            alert("Không tìm thấy trận đấu!");
+            return;
+        }
+        renderHeader();
+        renderServers();
+        renderChat();
+    });
+
+    function getTeam(id) { return window.db.tblTeam.find(t => t.teamId === id) || {name: "Unknown"}; }
+
+    function renderHeader() {
+        const home = getTeam(match.homeTeamId);
+        const away = getTeam(match.awayTeamId);
+        document.getElementById('matchHeader').innerHTML = `
+            <div class="live-indicator"><div class="live-dot"></div> LIVE</div>
+            <div class="score-center">
+                <div class="team-info">
+                    <div class="team-name">${home.name}</div>
+                    <div class="team-score">${match.homeScore}</div>
+                </div>
+                <div class="score-vs">VS</div>
+                <div class="team-info">
+                    <div class="team-name">${away.name}</div>
+                    <div class="team-score">${match.awayScore}</div>
+                </div>
+            </div>
+            <div class="match-time">${match.currentTime}'</div>`;
+    }
+
+    function renderChat() {
+        // Lọc bình luận theo tblLiveChatID của trận đấu hiện tại
+        const msgs = window.db.tblCommentDetail.filter(c => c.tblLiveChatID === match.tblLiveChatID && c.status === "Visible");
+        const box = document.getElementById('chatBox');
+        
+        box.innerHTML = msgs.map(m => {
+            const isAdmin = m.tblUserID === 3;
+            return `
+                <div class="msg-bubble ${isAdmin ? 'mod' : ''}">
+                    <div class="msg-user">${isAdmin ? '🛡️ Admin' : m.tblUserID}</div>
+                    <div class="msg-text">${m.content}</div>
+                </div>`;
+        }).join('');
+        box.scrollTop = box.scrollHeight;
+    }
+
+    function sendChat() {
+        const input = document.getElementById('chatInput');
+        if (!input.value.trim()) return;
+        
+        window.db.tblCommentDetail.push({
+            ID: Date.now(),
+            tblLiveChatID: match.tblLiveChatID,
+            tblUserID: sessionStorage.getItem('viewerNick') || "Khách",
+            content: input.value,
+            status: "Visible"
         });
-
-        function getTeam(id) { return window.db.tblTeam.find(t => t.teamId === id) || {name: "Unknown"}; }
-        function formatScore(score) { return score < 10 ? `0${score}` : score; }
-
-        function renderHeader() {
-            const home = getTeam(match.homeTeamId);
-            const away = getTeam(match.awayTeamId);
-            
-            document.getElementById('matchHeader').innerHTML = `
-                <div class="live-indicator">
-                    <div class="live-dot"></div> LIVE
-                </div>
-                <div class="score-center">
-                    <div class="team-info">
-                        <div class="team-name">${home.name}</div>
-                        <div class="team-score score-home">${formatScore(match.homeScore)}</div>
-                    </div>
-                    <div class="score-vs">VS</div>
-                    <div class="team-info">
-                        <div class="team-name">${away.name}</div>
-                        <div class="team-score">${formatScore(match.awayScore)}</div>
-                    </div>
-                </div>
-                <div class="match-time">${match.currentTime}</div>
-            `;
-        }
-
-        function renderServers() {
-            const links = window.db.tblLinkStream.filter(l => l.matchId === matchId);
-            const srvBox = document.getElementById('serverList');
-            srvBox.innerHTML = ''; 
-            
-            links.forEach((l, i) => {
-                const isActive = i === 0 ? 'active' : '';
-                srvBox.innerHTML += `
-                    <button class="server-btn ${isActive}" onclick="changeServer('${l.url}', this)">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></svg>
-                        ${l.serverName}
-                    </button>`;
-            });
-        }
-
-        function changeServer(url, btnElement) {
-            const btns = document.getElementById('serverList').querySelectorAll('button');
-            btns.forEach(b => b.classList.remove('active'));
-            btnElement.classList.add('active');
-        }
-
-        function renderChat() {
-            const msgs = window.db.tblCommentDetail.filter(c => c.tblLiveChatID === match.tblLiveChatID);
-            const box = document.getElementById('chatBox');
-            
-            box.innerHTML = msgs.map(m => {
-                // Giả lập ID 3 là Admin/Moderator
-                const isAdmin = m.tblUserID === 3;
-                let userName = "";
-                if(m.tblUserID === 4) userName = "User_8921";
-                else if(m.tblUserID === 5) userName = "SoccerFan99";
-                else if(m.tblUserID === 6) userName = "EliteWatcher";
-                
-                const modClass = isAdmin ? "mod" : "";
-                const userHtml = isAdmin 
-                    ? `<div class="msg-user">
-                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                         Moderator
-                       </div>`
-                    : `<div class="msg-user">${userName}</div>`;
-
-                return `
-                    <div class="msg-bubble ${modClass}">
-                        ${userHtml}
-                        <div class="msg-text">${m.content.replace('\n', '<br>')}</div>
-                    </div>`;
-            }).join('');
-            box.scrollTop = box.scrollHeight;
-        }
-
-        function sendChat() {
-            const input = document.getElementById('chatInput');
-            const text = input.value.trim();
-            if (!text) return;
-            window.db.tblCommentDetail.push({
-                tblLiveChatID: match.tblLiveChatID, tblUserID: 4, content: text, status: "Visible"
-            });
-            input.value = '';
-            renderChat();
-        }
-    </script>
+        
+        window.saveData(); // Lưu vào localStorage
+        input.value = '';
+        renderChat();
+    }
+    
+    function renderServers() {
+        const links = window.db.tblLinkStream.filter(l => l.matchId === matchId);
+        const srvBox = document.getElementById('serverList');
+        srvBox.innerHTML = links.map((l, i) => `
+            <button class="server-btn ${i===0?'active':''}">
+                ${l.serverName}
+            </button>`).join('');
+    }
+</script>
 </body>
 </html>
