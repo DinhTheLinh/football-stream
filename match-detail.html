@@ -15,7 +15,7 @@
         <div class="logo">ELITE STADIUM</div>
         <div class="search-bar">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-            <input type="text" placeholder="Search matches...">
+            <input type="text" placeholder="Tìm kiếm trận đấu...">
         </div>
         <div class="nav-icons">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
@@ -39,8 +39,16 @@
 
             <!-- Server Actions -->
             <div class="server-actions">
-                <span>Source:</span>
+                <span>Nguồn phát:</span>
                 <div style="display: flex; gap: 12px;" id="serverList">
+                    <!-- JS Render -->
+                </div>
+            </div>
+
+            <!-- Timeline Events -->
+            <div class="timeline-container">
+                <div class="timeline-title">⏱️ Diễn Biến Trận Đấu</div>
+                <div class="timeline-list" id="eventTimeline">
                     <!-- JS Render -->
                 </div>
             </div>
@@ -51,11 +59,11 @@
             <div class="chat-header">
                 <div class="chat-title">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-                    Live Chat
+                    Trò Chuyện Trực Tiếp
                 </div>
                 <div class="viewers">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-                    14.2k
+                    14.2k người xem
                 </div>
             </div>
             
@@ -65,7 +73,7 @@
 
             <div class="chat-input-area">
                 <div class="chat-input-wrapper">
-                    <input type="text" id="chatInput" placeholder="Send a message..." onkeypress="if(event.key==='Enter') sendChat()">
+                    <input type="text" id="chatInput" placeholder="Gửi tin nhắn..." onkeypress="if(event.key==='Enter') sendChat()">
                     <button onclick="sendChat()">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                     </button>
@@ -93,6 +101,7 @@
         renderHeader();
         renderServers();
         renderChat();
+        renderTimeline();
     });
 
     // Tự động cập nhật dữ liệu khi có thay đổi từ tab khác (Admin hoặc người xem khác)
@@ -110,6 +119,41 @@
     });
 
     function getTeam(id) { return window.db.tblTeam.find(t => t.teamId === id) || {name: "Unknown"}; }
+
+    function renderTimeline() {
+        const events = window.db.tblMatchEvent.filter(e => e.matchId === matchId).sort((a,b) => b.minute - a.minute);
+        const box = document.getElementById('eventTimeline');
+        
+        if (events.length === 0) {
+            box.innerHTML = "<p style='color:var(--text-muted); font-size:13px;'>Chưa có diễn biến nào được cập nhật.</p>";
+            return;
+        }
+
+        const icons = { "Goal": "⚽", "Yellow Card": "🟨", "Red Card": "🟥", "Substitution": "🔄" };
+        const typeVn = { "Goal": "Ghi bàn", "Yellow Card": "Thẻ vàng", "Red Card": "Thẻ đỏ", "Substitution": "Thay người" };
+        
+        box.innerHTML = events.map(e => {
+            const player = window.db.tblPlayer.find(p => p.id == e.playerId);
+            const subPlayer = e.subPlayerId ? window.db.tblPlayer.find(p => p.id == e.subPlayerId) : null;
+            const team = window.db.tblTeam.find(t => t.teamId === player.teamId);
+            const typeClass = e.type.toLowerCase().replace(' ', '');
+            
+            let desc = `${typeVn[e.type] || e.type}: ${player.name}`;
+            if (subPlayer) {
+                desc = `Thay người: <span style="color:var(--accent-red)">${player.name}</span> 🔄 <span style="color:var(--accent-green)">${subPlayer.name}</span>`;
+            }
+
+            return `
+                <div class="timeline-event ${typeClass}">
+                    <div class="event-min">${e.minute}'</div>
+                    <div class="event-icon">${icons[e.type] || '•'}</div>
+                    <div class="event-desc">
+                        ${desc}
+                        <span class="event-player">(${team.shortName})</span>
+                    </div>
+                </div>`;
+        }).join('');
+    }
 
     function renderHeader() {
         const home = getTeam(match.homeTeamId);

@@ -379,3 +379,163 @@ tr:last-child td { border-bottom: none; }
   .elite-match-layout { flex-direction: column; }
   .elite-chat-panel { height: 500px; }
 }
+/* --- Admin Dashboard Stats --- */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+.stat-card {
+  background: var(--bg-card);
+  padding: 25px;
+  border-radius: 16px;
+  border: 1px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.stat-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+.stat-info h3 { font-size: 1.8rem; font-weight: 800; margin-bottom: 2px; }
+.stat-info p { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
+
+/* Colors for stats */
+.stat-blue { background: rgba(59, 130, 246, 0.1); color: #3B82F6; }
+.stat-green { background: rgba(0, 255, 133, 0.1); color: var(--accent-green); }
+.stat-yellow { background: rgba(245, 166, 35, 0.1); color: #F5A623; }
+.stat-red { background: rgba(255, 59, 48, 0.1); color: var(--accent-red); }
+
+/* --- Admin Event Module Layout --- */
+.admin-event-layout {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: 30px;
+  align-items: flex-start;
+}
+@media (max-width: 1200px) { .admin-event-layout { grid-template-columns: 1fr; } }
+
+/* Match Selection Table */
+.match-selection-card {
+  background: var(--bg-card);
+  border-radius: 16px;
+  border: 1px solid var(--glass-border);
+  overflow: hidden;
+}
+.table-container th, .table-container td {
+    padding: 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--glass-border);
+    font-size: 0.9rem;
+}
+
+/* Fix tỉ số bị nhảy dòng */
+.table-container td:nth-child(3) {
+    white-space: nowrap;
+    font-family: 'Inter', sans-serif;
+    letter-spacing: 1px;
+}
+.match-selection-card .card-header {
+  padding: 20px 25px;
+  border-bottom: 1px solid var(--glass-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.match-selection-card .card-header h2 { font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+.match-selection-card .card-header h2::before { content: ''; width: 8px; height: 8px; background: var(--accent-red); border-radius: 50%; animation: pulse 2s infinite; }
+
+/* Right Panel (Event Form + Timeline) */
+.event-management-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.event-form-card {
+  background: var(--bg-card);
+  border-radius: 16px;
+  border: 1px solid var(--glass-border);
+  padding: 25px;
+}
+.event-match-detail-header {
+  text-align: center;
+  margin-bottom: 25px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--glass-border);
+}
+.event-match-detail-header h3 { font-size: 1.1rem; margin-bottom: 10px; color: var(--text-muted); }
+.event-match-detail-header .score-display {
+  font-size: 2.5rem; font-weight: 800; letter-spacing: 2px;
+}
+.event-match-detail-header .match-time {
+  font-size: 0.9rem; color: #F5A623; font-weight: 700; margin-top: 5px;
+}
+
+/* Timeline Styles */
+.timeline-card {
+  background: var(--bg-card);
+  border-radius: 16px;
+  border: 1px solid var(--glass-border);
+  padding: 25px;
+}
+.timeline-card h3 { font-size: 1rem; margin-bottom: 20px; color: #fff; display: flex; align-items: center; gap: 10px; }
+.timeline-list { display: flex; flex-direction: column; gap: 15px; }
+.timeline-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding-left: 15px;
+  position: relative;
+}
+.timeline-item::before {
+  content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+  width: 8px; height: 8px; border-radius: 50%;
+}
+.timeline-item.goal::before { background: var(--accent-green); box-shadow: 0 0 10px var(--accent-green); }
+.timeline-item.yellow::before { background: #F5A623; box-shadow: 0 0 10px #F5A623; }
+.timeline-item.red::before { background: var(--accent-red); box-shadow: 0 0 10px var(--accent-red); }
+
+.timeline-minute { font-weight: 700; color: var(--text-muted); min-width: 40px; font-size: 0.9rem; }
+.timeline-type {
+  padding: 4px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase;
+  background: rgba(255,255,255,0.05); color: var(--text-muted);
+}
+.timeline-item.goal .timeline-type { background: rgba(0,255,133,0.1); color: var(--accent-green); }
+.timeline-item.yellow .timeline-type { background: rgba(245,166,35,0.1); color: #F5A623; }
+.timeline-item.red .timeline-type { background: rgba(255,59,48,0.1); color: var(--accent-red); }
+
+.timeline-content { flex: 1; font-weight: 600; font-size: 0.95rem; }
+.timeline-content span { color: var(--text-muted); font-weight: 400; font-size: 0.85rem; }
+
+/* Error Modals */
+.error-modal .modal-content {
+  text-align: center;
+  padding: 40px;
+  border-radius: 20px;
+}
+.error-icon {
+  width: 70px; height: 70px; border-radius: 50%; margin: 0 auto 25px;
+  display: flex; align-items: center; justify-content: center; font-size: 2rem;
+}
+.error-modal.validation .error-icon { background: rgba(255,59,48,0.1); color: var(--accent-red); border: 1px solid rgba(255,59,48,0.2); }
+.error-modal.network .error-icon { background: rgba(245,166,35,0.1); color: #F5A623; border: 1px solid rgba(245,166,35,0.2); }
+.error-modal.system .error-icon { background: rgba(59, 130, 246, 0.1); color: #3B82F6; border: 1px solid rgba(59, 130, 246, 0.2); }
+
+.error-modal h2 { font-size: 1.5rem; margin-bottom: 10px; font-weight: 800; }
+.error-modal p { color: var(--text-muted); margin-bottom: 30px; font-size: 1rem; }
+.error-modal .btn-primary, .error-modal .btn-secondary { min-width: 120px; }
+
+/* Customize Form Elements in Admin */
+.admin-event-layout label {
+  font-size: 0.85rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 8px; display: block;
+}
+.admin-event-layout select, .admin-event-layout input {
+  background: #1C2027; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; margin-bottom: 20px;
+}

@@ -121,4 +121,24 @@
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
+
+        /* Timeline Events */
+        .timeline-container {
+            background-color: var(--bg-card); border-radius: 12px; padding: 20px;
+        }
+        .timeline-title { font-size: 16px; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .timeline-list { display: flex; flex-direction: column; gap: 12px; }
+        .timeline-event {
+            display: flex; align-items: center; gap: 16px; padding: 12px;
+            background: rgba(255,255,255,0.02); border-radius: 8px; border-left: 3px solid var(--border-color);
+        }
+        .timeline-event.goal { border-left-color: var(--accent-green); background: rgba(34, 197, 94, 0.05); }
+        .timeline-event.yellow { border-left-color: #facc15; }
+        .timeline-event.red { border-left-color: var(--accent-red); }
+
+        .event-min { font-weight: 800; color: var(--accent-green); min-width: 40px; font-size: 14px; }
+        .event-icon { font-size: 18px; }
+        .event-desc { font-size: 14px; font-weight: 600; }
+        .event-player { color: var(--text-muted); font-weight: 400; font-size: 12px; margin-left: 4px; }
+
    

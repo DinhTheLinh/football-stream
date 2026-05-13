@@ -2,17 +2,26 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Cập Nhật Diễn Biến</title>
+    <title>Cập Nhật Diễn Biến Trận Đấu | Admin</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* Small override for active match row */
+        .match-row.active {
+            background: rgba(0, 255, 133, 0.05);
+        }
+        .match-row.active td {
+            color: var(--accent-green);
+        }
+    </style>
 </head>
-<body>
+<body class="elite-stadium-bg">
     <div class="admin-wrapper">
         <aside class="admin-sidebar">
-            <div class="logo">⚽ AdminPanel</div>
+            <div class="logo">⚽ Elite Stadium</div>
             <nav class="admin-nav">
-                <a href="admin-dashboard.html">📊 Tổng Quan Dashboard</a>
+                <a href="admin-dashboard.html">📊 Tổng Quan</a>
                 <a href="admin-match.html">🏟️ Quản Lý Trận Đấu</a>
-                <a href="admin-event.html" class="active">⏱️ Cập Nhật Events</a>
+                <a href="admin-event.html" class="active">⏱️ Cập Nhật Diễn Biến</a>
                 <a href="admin-chat.html">🛡️ Kiểm Duyệt Chat</a>
             </nav>
             <div style="padding: 20px;">
@@ -22,53 +31,168 @@
 
         <main class="admin-main">
             <div class="admin-header">
-                <h2>Cập Nhật Diễn Biến Trận Đấu</h2>
+                <div>
+                    <h1 style="font-size: 1.8rem; font-weight: 800;">Cập Nhật Diễn Biến</h1>
+                    <p style="color: var(--text-muted);">Quản lý sự kiện và cập nhật tỉ số các trận đấu đang diễn ra.</p>
+                </div>
             </div>
 
-            <div class="grid-layout">
-                <div class="card" style="box-shadow: none;">
-                    <h3 style="margin-bottom: 20px;">🔴 Chọn Trận Đang Live</h3>
-                    <div id="liveMatchList" style="display: flex; flex-direction: column; gap: 10px;"></div>
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon stat-blue">⚽</div>
+                    <div class="stat-info">
+                        <h3 id="statLiveCount">0</h3>
+                        <p>Trận Đang Live</p>
+                    </div>
                 </div>
-                
-                <div class="card" id="eventPanel" style="display:none; box-shadow: none; border-color: var(--accent-green);">
-                    <h3 id="epMatchName" style="color: var(--accent-green); text-align: center;"></h3>
-                    <p style="font-size:2.5rem; text-align:center; font-weight: 800; letter-spacing: 2px;" id="epScore"></p>
-                    <button class="btn-primary" onclick="openEventModal()" style="width:100%; margin: 25px 0; padding: 15px; font-size: 1.1rem;">+ Ghi nhận sự kiện</button>
-                    
-                    <h4 style="margin-bottom: 10px; color: var(--text-muted); border-bottom: 1px solid var(--glass-border); padding-bottom: 10px;">Timeline Trận Đấu</h4>
-                    <div id="timelineList" style="display: flex; flex-direction: column; gap: 8px;"></div>
+                <div class="stat-card">
+                    <div class="stat-icon stat-green">🎯</div>
+                    <div class="stat-info">
+                        <h3 id="statTotalGoals">0</h3>
+                        <p>Tổng Bàn Thắng</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon stat-yellow">🟨</div>
+                    <div class="stat-info">
+                        <h3 id="statYellowCards">0</h3>
+                        <p>Thẻ Vàng</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon stat-red">🟥</div>
+                    <div class="stat-info">
+                        <h3 id="statRedCards">0</h3>
+                        <p>Thẻ Đỏ</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="admin-event-layout">
+                <!-- Left: Match List -->
+                <div class="match-selection-card">
+                    <div class="card-header">
+                        <h2>Các Trận Đang Live</h2>
+                        <button class="btn-secondary" onclick="location.reload()" style="padding: 5px 12px; font-size: 0.8rem;">🔄 Làm mới</button>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Đội Nhà</th>
+                                    <th>Đội Khách</th>
+                                    <th>Tỉ Số</th>
+                                    <th>Phút</th>
+                                    <th>Trạng Thái</th>
+                                    <th>Thao Tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="liveMatchTableBody">
+                                <!-- JS Render -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Right: Management Panel -->
+                <div class="event-management-panel">
+                    <!-- Event Form -->
+                    <div class="event-form-card" id="eventFormCard" style="display: none;">
+                        <div class="event-match-detail-header">
+                            <h3 id="panelMatchTeams">MU vs Chelsea</h3>
+                            <div class="score-display" id="panelScore">2 - 1</div>
+                            <div class="match-time" id="panelTime">⏱️ 65' — Hiệp 2</div>
+                        </div>
+
+                        <div id="addEventSection">
+                            <h4 style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">🔵 Thêm Sự Kiện Mới</h4>
+                            
+                            <label>Loại sự kiện</label>
+                            <select id="evType" onchange="toggleSubSection()">
+                                <option value="Goal">Bàn thắng ⚽</option>
+                                <option value="Yellow Card">Thẻ vàng 🟨</option>
+                                <option value="Red Card">Thẻ đỏ 🟥</option>
+                                <option value="Substitution">Thay người 🔄</option>
+                            </select>
+
+                            <label>Chọn Đội</label>
+                            <select id="evTeam" onchange="filterPlayers()">
+                                <option value="">Chọn đội ghi nhận...</option>
+                            </select>
+
+                            <div id="mainPlayerSection">
+                                <label id="labelMainPlayer">Cầu thủ</label>
+                                <select id="evPlayer">
+                                    <option value="">Chọn cầu thủ...</option>
+                                </select>
+                            </div>
+
+                            <div id="subPlayerSection" style="display: none;">
+                                <label>Vào sân (Dự bị)</label>
+                                <select id="evPlayerSub">
+                                    <option value="">Chọn cầu thủ vào sân...</option>
+                                </select>
+                            </div>
+
+                            <label>Phút thứ</label>
+                            <input type="number" id="evMinute" placeholder="Nhập phút thi đấu...">
+
+                            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                                <button class="btn-primary" style="flex: 1;" onclick="handleSaveEvent()">✅ Xác nhận</button>
+                                <button class="btn-secondary" style="flex: 1;" onclick="closeEventPanel()">❌ Hủy bỏ</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Timeline -->
+                    <div class="timeline-card" id="timelineCard" style="display: none;">
+                        <h3>📑 Nhật Ký Diễn Biến</h3>
+                        <div class="timeline-list" id="timelineList">
+                            <!-- JS Render -->
+                        </div>
+                    </div>
+
+                    <div id="noSelectionMessage" style="text-align: center; padding: 40px; color: var(--text-muted); background: var(--bg-card); border-radius: 16px; border: 1px dashed var(--glass-border);">
+                        <p>Vui lòng chọn một trận đấu từ danh sách để bắt đầu cập nhật diễn biến.</p>
+                    </div>
                 </div>
             </div>
         </main>
     </div>
 
-    <!-- Modal Form -->
-    <div class="modal" id="eventModal">
+    <!-- Error Modals -->
+    <div class="modal error-modal validation" id="validationModal">
         <div class="modal-content">
-            <div class="modal-header">Thêm Sự Kiện Mới</div>
-            <div id="formError" style="color:var(--accent-red); display:none; margin-bottom:15px; padding: 10px; background: rgba(255,59,48,0.1); border-radius:6px; font-size:0.9rem;"></div>
-            
-            <label style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 5px; display: block;">Loại sự kiện</label>
-            <select id="evType">
-                <option value="Goal">Bàn thắng ⚽</option>
-                <option value="Yellow Card">Thẻ vàng 🟨</option>
-                <option value="Red Card">Thẻ đỏ 🟥</option>
-                <option value="Substitution">Thay người 🔄</option>
-            </select>
-            
-            <label style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 5px; display: block;">Phút thứ (VD: 45)</label>
-            <input type="number" id="evMinute" placeholder="Phút thi đấu...">
-            
-            <label style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 5px; display: block;">Cầu thủ chính</label>
-            <select id="evPlayerMain"><option value="">Chọn cầu thủ chính...</option></select>
-            
-            <div class="modal-actions" style="margin-top: 20px;">
-                <button class="btn-secondary" onclick="closeEventModal()">Hủy</button>
-                <button class="btn-primary" onclick="saveEvent()">Lưu Sự Kiện</button>
+            <div class="error-icon">❗</div>
+            <h2>Lỗi Dữ Liệu</h2>
+            <p id="validationMsg">Dữ liệu không hợp lệ. Vui lòng kiểm tra lại.</p>
+            <button class="btn-danger" onclick="closeModal('validationModal')">Đã hiểu</button>
+        </div>
+    </div>
+
+    <div class="modal error-modal network" id="networkModal">
+        <div class="modal-content">
+            <div class="error-icon">⚠️</div>
+            <h2>Lỗi Kết Nối</h2>
+            <p>Không thể kết nối với máy chủ. Vui lòng thử lại.</p>
+            <div style="display: flex; justify-content: center; gap: 10px;">
+                <button class="btn-primary" onclick="retryNetwork()">🔄 Thử lại</button>
+                <button class="btn-secondary" onclick="closeModal('networkModal')">Hủy</button>
             </div>
         </div>
     </div>
+
+    <div class="modal error-modal system" id="systemModal">
+        <div class="modal-content">
+            <div class="error-icon">⚙️</div>
+            <h2>Lỗi Hệ Thống</h2>
+            <p>Đã xảy ra lỗi không xác định. Vui lòng quay lại sau.</p>
+            <button class="btn-secondary" onclick="closeModal('systemModal')">❌ Đóng</button>
+        </div>
+    </div>
+
+    <div id="toastContainer"></div>
 
     <script src="data.js"></script>
     <script src="auth.js"></script>
@@ -77,83 +201,254 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             checkAdminAuth();
+            updateStats();
             renderLiveMatches();
         });
 
+        function updateStats() {
+            const matches = window.db.tblMatch;
+            const events = window.db.tblMatchEvent;
+            
+            document.getElementById('statLiveCount').textContent = matches.filter(m => m.status === 'Live').length;
+            document.getElementById('statTotalGoals').textContent = events.filter(e => e.type === 'Goal').length;
+            document.getElementById('statYellowCards').textContent = events.filter(e => e.type === 'Yellow Card').length;
+            document.getElementById('statRedCards').textContent = events.filter(e => e.type === 'Red Card').length;
+        }
+
         function renderLiveMatches() {
-            const lives = window.db.tblMatch.filter(m => m.status === 'Live');
-            const list = document.getElementById('liveMatchList');
-            list.innerHTML = lives.map(m => {
-                const hn = window.db.tblTeam.find(t=>t.teamId === m.homeTeamId).name;
-                const an = window.db.tblTeam.find(t=>t.teamId === m.awayTeamId).name;
-                return `<button class="btn-secondary" style="width:100%; text-align:left; justify-content: flex-start; font-size: 1.05rem;" onclick="selectMatch(${m.matchId})">${hn} vs ${an} <span style="margin-left:auto; color:var(--accent-green);">${m.homeScore}-${m.awayScore}</span></button>`;
+            const matches = window.db.tblMatch.filter(m => m.status === 'Live' || m.status === 'HT');
+            const tbody = document.getElementById('liveMatchTableBody');
+            
+            tbody.innerHTML = matches.map(m => {
+                const home = window.db.tblTeam.find(t => t.teamId === m.homeTeamId);
+                const away = window.db.tblTeam.find(t => t.teamId === m.awayTeamId);
+                const isActive = selectedMatchId === m.matchId ? 'active' : '';
+                const statusVn = m.status === 'Live' ? 'Đang Live' : 'Nghỉ giữa hiệp';
+                
+                return `
+                    <tr class="match-row ${isActive}" id="match-row-${m.matchId}">
+                        <td style="font-weight:700;"><span style="color:var(--accent-red); margin-right:5px;">${home.shortName}</span> ${home.name}</td>
+                        <td style="font-weight:700;"><span style="color:#3B82F6; margin-right:5px;">${away.shortName}</span> ${away.name}</td>
+                        <td style="font-weight:800; font-size:1.1rem;">${m.homeScore} - ${m.awayScore}</td>
+                        <td style="color:#F5A623; font-weight:700;">${m.currentTime}'</td>
+                        <td><span class="status-badge ${m.status === 'Live' ? 'badge-live' : 'badge-upcoming'}">${statusVn}</span></td>
+                        <td>
+                            <button class="btn-primary" style="padding: 6px 12px; font-size:0.8rem;" onclick="selectMatch(${m.matchId})">⚙️ Quản lý</button>
+                        </td>
+                    </tr>
+                `;
             }).join('');
-            if (lives.length === 0) list.innerHTML = "<p style='color:var(--text-muted);'>Không có trận nào đang diễn ra.</p>";
         }
 
         function selectMatch(id) {
             selectedMatchId = id;
-            document.getElementById('eventPanel').style.display = 'block';
+            document.getElementById('noSelectionMessage').style.display = 'none';
+            document.getElementById('eventFormCard').style.display = 'block';
+            document.getElementById('timelineCard').style.display = 'block';
+            
+            renderLiveMatches(); // Refresh highlighting
             updateEventPanel();
             
-            // Tải danh sách cầu thủ cho trận này
+            // Tải danh sách đội cho trận này
             const m = window.db.tblMatch.find(x => x.matchId === id);
-            const players = window.db.tblPlayer.filter(p => p.teamId === m.homeTeamId || p.teamId === m.awayTeamId);
-            const sel = document.getElementById('evPlayerMain');
-            sel.innerHTML = '<option value="">Chọn cầu thủ chính...</option>' + players.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+            const home = window.db.tblTeam.find(t => t.teamId === m.homeTeamId);
+            const away = window.db.tblTeam.find(t => t.teamId === m.awayTeamId);
+            
+            const teamSel = document.getElementById('evTeam');
+            teamSel.innerHTML = `
+                <option value="">Chọn đội ghi nhận...</option>
+                <option value="${home.teamId}">${home.name}</option>
+                <option value="${away.teamId}">${away.name}</option>
+            `;
+            
+            document.getElementById('evPlayer').innerHTML = '<option value="">Chọn cầu thủ...</option>';
+            document.getElementById('evPlayerSub').innerHTML = '<option value="">Chọn cầu thủ vào sân...</option>';
+            document.getElementById('evType').value = "Goal";
+            toggleSubSection();
+        }
+
+        function toggleSubSection() {
+            const type = document.getElementById('evType').value;
+            const subSection = document.getElementById('subPlayerSection');
+            const labelMain = document.getElementById('labelMainPlayer');
+            
+            if (type === 'Substitution') {
+                subSection.style.display = 'block';
+                labelMain.textContent = "Ra sân (Chính)";
+            } else {
+                subSection.style.display = 'none';
+                labelMain.textContent = "Cầu thủ";
+            }
+            filterPlayers(); // Refresh player lists based on type
+        }
+
+        function filterPlayers() {
+            const teamId = parseInt(document.getElementById('evTeam').value);
+            const type = document.getElementById('evType').value;
+            
+            if (!teamId) {
+                document.getElementById('evPlayer').innerHTML = '<option value="">Chọn cầu thủ...</option>';
+                document.getElementById('evPlayerSub').innerHTML = '<option value="">Chọn cầu thủ vào sân...</option>';
+                return;
+            }
+
+            const players = window.db.tblPlayer.filter(p => p.teamId === teamId);
+            
+            if (type === 'Substitution') {
+                // Chỉ hiện cầu thủ Đang đá (isStarter: true) để thay ra
+                const starters = players.filter(p => p.isStarter === true);
+                document.getElementById('evPlayer').innerHTML = '<option value="">Chọn cầu thủ ra nghỉ...</option>' + starters.map(p => `<option value="${p.id}">${p.name} (Đá chính)</option>`).join('');
+                
+                // Chỉ hiện cầu thủ Dự bị (isStarter: false) để thay vào
+                const bench = players.filter(p => p.isStarter === false);
+                document.getElementById('evPlayerSub').innerHTML = '<option value="">Chọn cầu thủ vào sân...</option>' + bench.map(p => `<option value="${p.id}">${p.name} (Dự bị)</option>`).join('');
+            } else {
+                // Các sự kiện khác thì hiện tất cả (hoặc tùy Thùy muốn chỉ hiện người đang đá)
+                document.getElementById('evPlayer').innerHTML = '<option value="">Chọn cầu thủ...</option>' + players.map(p => `<option value="${p.id}">${p.name} ${p.isStarter ? '(Đá chính)' : '(Dự bị)'}</option>`).join('');
+            }
         }
 
         function updateEventPanel() {
             const m = window.db.tblMatch.find(x => x.matchId === selectedMatchId);
-            const hn = window.db.tblTeam.find(t=>t.teamId === m.homeTeamId).name;
-            const an = window.db.tblTeam.find(t=>t.teamId === m.awayTeamId).name;
-            document.getElementById('epMatchName').textContent = `${hn} vs ${an}`;
-            document.getElementById('epScore').textContent = `${m.homeScore} - ${m.awayScore}`;
+            const home = window.db.tblTeam.find(t => t.teamId === m.homeTeamId);
+            const away = window.db.tblTeam.find(t => t.teamId === m.awayTeamId);
+            const statusVn = m.status === 'Live' ? 'Đang đá' : 'Nghỉ giữa hiệp';
+            
+            document.getElementById('panelMatchTeams').textContent = `${home.name} vs ${away.name}`;
+            document.getElementById('panelScore').textContent = `${m.homeScore} - ${m.awayScore}`;
+            document.getElementById('panelTime').textContent = `⏱️ ${m.currentTime}' — ${statusVn}`;
 
-            const events = window.db.tblMatchEvent.filter(e => e.matchId === selectedMatchId).sort((a,b)=>b.minute - a.minute);
-            let eventIcons = { "Goal": "⚽", "Yellow Card": "🟨", "Red Card": "🟥", "Substitution": "🔄" };
+            // Render Timeline
+            const events = window.db.tblMatchEvent.filter(e => e.matchId === selectedMatchId).sort((a,b) => b.minute - a.minute);
+            const timelineList = document.getElementById('timelineList');
             
-            document.getElementById('timelineList').innerHTML = events.map(e => `
-                <div style="background: rgba(255,255,255,0.03); padding: 12px 15px; border-radius: 8px; display: flex; align-items: center; gap: 15px;">
-                    <span style="font-weight: 700; color: var(--accent-green); min-width: 60px;">Phút ${e.minute}'</span>
-                    <span style="font-size: 1.2rem;">${eventIcons[e.type]}</span>
-                    <span>${window.db.tblPlayer.find(p=>p.id==e.playerId)?.name || 'Unknown'}</span>
-                </div>
-            `).join('');
-            
-            if (!events.length) document.getElementById('timelineList').innerHTML = "<p style='color:var(--text-muted); font-size:0.9rem;'>Chưa có sự kiện nào.</p>";
+            if (events.length === 0) {
+                timelineList.innerHTML = "<p style='color:var(--text-muted); text-align:center; padding: 20px;'>Chưa có sự kiện nào được ghi lại.</p>";
+            } else {
+                const typeVn = { "Goal": "Ghi bàn", "Yellow Card": "Thẻ vàng", "Red Card": "Thẻ đỏ", "Substitution": "Thay người" };
+                timelineList.innerHTML = events.map(e => {
+                    const player = window.db.tblPlayer.find(p => p.id == e.playerId);
+                    const subPlayer = e.subPlayerId ? window.db.tblPlayer.find(p => p.id == e.subPlayerId) : null;
+                    const team = window.db.tblTeam.find(t => t.teamId === player.teamId);
+                    let typeClass = e.type.toLowerCase().replace(' ', '');
+                    
+                    let content = player.name;
+                    if (subPlayer) {
+                        content = `<span style="color:var(--accent-red)">${player.name}</span> 🔄 <span style="color:var(--accent-green)">${subPlayer.name}</span>`;
+                    }
+
+                    return `
+                        <div class="timeline-item ${typeClass}">
+                            <div class="timeline-minute">${e.minute}'</div>
+                            <div class="timeline-type">${typeVn[e.type] || e.type}</div>
+                            <div class="timeline-content">${content} <span>— ${team.name}</span></div>
+                        </div>
+                    `;
+                }).join('');
+            }
         }
 
-        function openEventModal() { 
-            document.getElementById('formError').style.display = 'none';
-            document.getElementById('eventModal').classList.add('active'); 
-        }
-        function closeEventModal() { document.getElementById('eventModal').classList.remove('active'); }
-
-        function saveEvent() {
-            const err = document.getElementById('formError');
+        function handleSaveEvent() {
             const type = document.getElementById('evType').value;
-            const minute = parseInt(document.getElementById('evMinute').value);
-            const ply = document.getElementById('evPlayerMain').value;
+            const teamId = document.getElementById('evTeam').value;
+            const minute = document.getElementById('evMinute').value;
+            const ply = document.getElementById('evPlayer').value;
+            const subPly = document.getElementById('evPlayerSub').value;
 
-            if (!type || !minute || !ply) { err.textContent="Vui lòng nhập đầy đủ thông tin sự kiện."; err.style.display='block'; return;}
-            if (minute <= 0) { err.textContent="Phút thi đấu phải là số nguyên dương hợp lệ."; err.style.display='block'; return;}
+            // 1. Validation Logic
+            if (!type || !teamId || !minute || !ply) {
+                showModal('validationModal');
+                document.getElementById('validationMsg').textContent = "Vui lòng nhập đầy đủ thông tin sự kiện.";
+                return;
+            }
+            if (type === 'Substitution' && !subPly) {
+                showModal('validationModal');
+                document.getElementById('validationMsg').textContent = "Vui lòng chọn cầu thủ vào sân.";
+                return;
+            }
+            if (type === 'Substitution' && ply === subPly) {
+                showModal('validationModal');
+                document.getElementById('validationMsg').textContent = "Cầu thủ ra và vào sân không được trùng nhau.";
+                return;
+            }
+            if (parseInt(minute) <= 0 || parseInt(minute) > 120) {
+                showModal('validationModal');
+                document.getElementById('validationMsg').textContent = "Phút thi đấu không hợp lệ (1-120).";
+                return;
+            }
 
-            window.db.tblMatchEvent.push({ id: Date.now(), matchId: selectedMatchId, type: type, minute: minute, playerId: parseInt(ply) });
-            
-            // Xử lý logic tăng bàn thắng
+            // 2. Simulate System/Network error randomly for demo (5% chance)
+            const rand = Math.random();
+            if (rand < 0.05) {
+                showModal('systemModal');
+                return;
+            } else if (rand < 0.1) {
+                showModal('networkModal');
+                return;
+            }
+
+            // 3. Save Logic
+            const newEvent = {
+                id: Date.now(),
+                matchId: selectedMatchId,
+                type: type,
+                minute: parseInt(minute),
+                playerId: parseInt(ply),
+                subPlayerId: type === 'Substitution' ? parseInt(subPly) : null
+            };
+
+            window.db.tblMatchEvent.push(newEvent);
+
+            // Update Score if Goal
             if (type === 'Goal') {
                 const m = window.db.tblMatch.find(x => x.matchId === selectedMatchId);
-                const teamId = window.db.tblPlayer.find(x => x.id == ply).teamId;
-                if (teamId === m.homeTeamId) m.homeScore++; else m.awayScore++;
+                const player = window.db.tblPlayer.find(p => p.id == ply);
+                if (player.teamId === m.homeTeamId) m.homeScore++; else m.awayScore++;
             }
 
             window.saveData();
-            closeEventModal();
             updateEventPanel();
-            renderLiveMatches(); // Cập nhật lại list gốc nếu điểm số đổi
-            window.showToast("Đã lưu sự kiện thành công.");
+            updateStats();
+            renderLiveMatches();
+            
+            // Clear fields
+            document.getElementById('evMinute').value = '';
+            document.getElementById('evPlayer').value = '';
+            document.getElementById('evPlayerSub').value = '';
+            
+            showToast("Đã ghi nhận sự kiện thành công!");
         }
+
+        function closeEventPanel() {
+            selectedMatchId = null;
+            document.getElementById('eventFormCard').style.display = 'none';
+            document.getElementById('timelineCard').style.display = 'none';
+            document.getElementById('noSelectionMessage').style.display = 'block';
+            renderLiveMatches();
+        }
+
+        // Modal Helpers
+        function showModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+        
+        function retryNetwork() {
+            closeModal('networkModal');
+            showToast("Đang thử lại kết nối...");
+            setTimeout(handleSaveEvent, 1000);
+        }
+
+        function showToast(msg) {
+            const toast = document.createElement('div');
+            toast.className = 'toast toast-success show';
+            toast.innerHTML = `<span>✅</span> ${msg}`;
+            document.getElementById('toastContainer').appendChild(toast);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 400);
+            }, 3000);
+        }
+
+
     </script>
 </body>
 </html>
